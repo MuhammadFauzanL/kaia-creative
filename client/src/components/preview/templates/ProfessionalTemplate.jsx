@@ -41,7 +41,7 @@ const MarkdownRenderer = ({ content }) => {
     if (!content) return null;
     return (
         <SafeMarkdown content={content}>
-            <ReactMarkdown rehypePlugins={[rehypeRaw]} className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-0 leading-snug">
+            <ReactMarkdown rehypePlugins={[rehypeRaw]} className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-0 leading-snug break-words">
                 {content}
             </ReactMarkdown>
         </SafeMarkdown>
@@ -108,7 +108,7 @@ const ProfessionalTemplate = ({ data }) => {
                                 <div className="w-[140px] shrink-0 text-left text-sm text-black font-medium leading-snug">
                                     {renderItem(item).date}
                                 </div>
-                                <div className="flex-1 -mt-1">
+                                <div className="flex-1 -mt-1 min-w-0">
                                     {renderItem(item).content}
                                 </div>
                             </div>
@@ -298,7 +298,7 @@ const ProfessionalTemplate = ({ data }) => {
     };
 
     return (
-        <div className="w-full h-full bg-white text-black" style={{ ...fontStyle, padding: '1cm 1cm 1cm 1cm' }}>
+        <div className="w-full h-full bg-white text-black" style={{ ...fontStyle, padding: '1cm 1.5cm 1cm 1.5cm' }}>
             <style>{`
                 @media print {
                     section {
@@ -326,17 +326,16 @@ const ProfessionalTemplate = ({ data }) => {
                         </span>
                     )}
                 </div>
-                <div className="flex justify-center items-center flex-wrap gap-1 text-sm text-black">
+                <div className="flex justify-center items-center flex-wrap gap-x-1.5 gap-y-1 text-sm text-black">
                     {[
                         personalInfo?.email,
                         personalInfo?.phone,
                         [personalInfo?.city, personalInfo?.country].filter(Boolean).join(', '),
                         personalInfo?.linkedin,
                         personalInfo?.website
-                    ].filter(Boolean).map((info, index) => (
-                        <span key={index}>
-                            {index > 0 && ", "}
-                            {String(info).includes('http') ? <a href={String(info)} target="_blank" rel="noopener noreferrer" className="text-black no-underline hover:text-gray-700">{info}</a> : info}
+                    ].filter(Boolean).map((info, index, arr) => (
+                        <span key={`${index}-${String(info).substring(0, 10)}`}>
+                            {String(info).includes('http') ? <a href={String(info)} target="_blank" rel="noopener noreferrer" className="text-black no-underline hover:text-gray-700">{info}</a> : info}{index < arr.length - 1 && ","}
                         </span>
                     ))}
                 </div>
