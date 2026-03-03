@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { ResumeProvider, useResume } from '../context/ResumeContext';
 import FormEditor from '../components/editor/FormEditor';
 import ResumePreview from '../components/preview/ResumePreview';
-import { Download, Trash2, Target, Send, FileText, Save } from 'lucide-react';
+import { Download, Trash2, Target, Send, FileText, Save, ChevronDown, FileType } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const BuilderContent = () => {
@@ -11,12 +11,31 @@ const BuilderContent = () => {
     const [isDragging, setIsDragging] = useState(false);
     const containerRef = useRef(null);
     const [saveIndicator, setSaveIndicator] = useState(false);
+    const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+    const downloadMenuRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (downloadMenuRef.current && !downloadMenuRef.current.contains(e.target)) {
+                setShowDownloadMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Show save indicator when data changes
     useEffect(() => {
         if (resumeData && !loading) {
             setSaveIndicator(true);
             const timer = setTimeout(() => setSaveIndicator(false), 1500);
+
+            // Set document title so PDF print dialog uses the correct filename instead of UUID URL
+            document.title = resumeData.personalInfo?.firstName
+                ? `${resumeData.personalInfo.firstName} Resume`
+                : 'Resume';
+
             return () => clearTimeout(timer);
         }
     }, [resumeData]);
@@ -65,7 +84,125 @@ const BuilderContent = () => {
     );
     if (!resumeData) return <div className="p-10 text-center">Initializing...</div>;
 
-    const handleDownload = () => { window.print(); };
+    const handleDownloadPDF = () => {
+        setShowDownloadMenu(false);
+        window.print();
+    };
+
+    const handleDownloadWord = () => {
+        setShowDownloadMenu(false);
+
+        // Get the resume preview element
+        const resumePaper = document.querySelector('.resume-paper');
+        if (!resumePaper) {
+            alert('Resume preview not found. Please try again.');
+            return;
+        }
+
+        // Clone to avoid modifying the live DOM
+        const clone = resumePaper.cloneNode(true);
+
+        // Collect all computed styles from stylesheets
+        const styleSheets = Array.from(document.styleSheets);
+        let allCSS = '';
+        styleSheets.forEach(sheet => {
+            try {
+                const rules = Array.from(sheet.cssRules || []);
+                rules.forEach(rule => {
+                    allCSS += rule.cssText + '\n';
+                });
+            } catch (e) {
+                // Cross-origin stylesheets can't be read
+            }
+        });
+
+        // Build inline styles for every element so Word can read them
+        const applyInlineStyles = (source, target) => {
+            const computed = window.getComputedStyle(source);
+            const importantProps = [
+                'color', 'background-color', 'background',
+                'font-family', 'font-size', 'font-weight', 'font-style',
+                'text-align', 'text-decoration', 'text-transform',
+                'line-height', 'letter-spacing',
+                'margin', 'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
+                'padding', 'padding-top', 'padding-bottom', 'padding-left', 'padding-right',
+                'border', 'border-top', 'border-bottom', 'border-left', 'border-right',
+                'border-color', 'border-width', 'border-style', 'border-radius',
+                'width', 'max-width', 'min-width',
+                'display', 'flex-direction', 'justify-content', 'align-items', 'gap',
+                'list-style-type', 'white-space', 'word-break', 'overflow-wrap'
+            ];
+            let inlineStyle = '';
+            importantProps.forEach(prop => {
+                const val = computed.getPropertyValue(prop);
+                if (val && val !== '' && val !== 'none' && val !== 'normal' && val !== 'auto') {
+                    inlineStyle += `${prop}:${val};`;
+                }
+            });
+            target.setAttribute('style', (target.getAttribute('style') || '') + inlineStyle);
+
+            const sourceChildren = source.children;
+            const targetChildren = target.children;
+            for (let i = 0; i < sourceChildren.length && i < targetChildren.length; i++) {
+                applyInlineStyles(sourceChildren[i], targetChildren[i]);
+            }
+        };
+
+        applyInlineStyles(resumePaper, clone);
+
+        const fileName = resumeData.personalInfo?.firstName
+            ? `${resumeData.personalInfo.firstName}_Resume`
+            : 'Resume';
+
+        // Create Word-compatible HTML document
+        const htmlContent = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office"
+                  xmlns:w="urn:schemas-microsoft-com:office:word"
+                  xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8">
+                <title>${fileName}</title>
+                <!--[if gte mso 9]>
+                <xml>
+                    <w:WordDocument>
+                        <w:View>Print</w:View>
+                        <w:Zoom>100</w:Zoom>
+                        <w:DoNotOptimizeForBrowser/>
+                    </w:WordDocument>
+                </xml>
+                <![endif]-->
+                <style>
+                    @page {
+                        size: A4;
+                        margin: 1cm;
+                    }
+                    body {
+                        font-family: 'Times New Roman', serif;
+                        margin: 0;
+                        padding: 0;
+                    }
+                    ${allCSS}
+                </style>
+            </head>
+            <body>
+                ${clone.outerHTML}
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob(['\ufeff', htmlContent], {
+            type: 'application/msword'
+        });
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${fileName}.doc`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
 
     return (
         <div className="h-screen flex flex-col bg-gray-100">
@@ -136,14 +273,54 @@ const BuilderContent = () => {
                         <Trash2 className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Clear</span>
                     </button>
-                    <button
-                        onClick={handleDownload}
-                        className="flex items-center gap-1.5 text-sm px-4 py-1.5 rounded-lg text-white font-semibold transition-colors"
-                        style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>
-                        <Download className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">Download PDF</span>
-                        <span className="sm:hidden">PDF</span>
-                    </button>
+
+                    {/* Download Dropdown */}
+                    <div className="relative" ref={downloadMenuRef}>
+                        <div className="flex">
+                            <button
+                                onClick={handleDownloadPDF}
+                                className="flex items-center gap-1.5 text-sm px-4 py-1.5 rounded-l-lg text-white font-semibold transition-colors"
+                                style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>
+                                <Download className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">Download PDF</span>
+                                <span className="sm:hidden">PDF</span>
+                            </button>
+                            <button
+                                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                                className="flex items-center px-2 py-1.5 rounded-r-lg text-white font-semibold transition-colors border-l border-white/30"
+                                style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showDownloadMenu ? 'rotate-180' : ''}`} />
+                            </button>
+                        </div>
+
+                        {/* Dropdown Menu */}
+                        {showDownloadMenu && (
+                            <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 py-1.5 z-50 animate-fadeIn">
+                                <button
+                                    onClick={handleDownloadPDF}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                    <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                                        <FileText className="w-4 h-4 text-red-500" />
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="font-semibold">Download PDF</div>
+                                        <div className="text-xs text-gray-400">Best for sharing</div>
+                                    </div>
+                                </button>
+                                <button
+                                    onClick={handleDownloadWord}
+                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                        <FileType className="w-4 h-4 text-blue-500" />
+                                    </div>
+                                    <div className="text-left">
+                                        <div className="font-semibold">Download Word</div>
+                                        <div className="text-xs text-gray-400">Editable .doc file</div>
+                                    </div>
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
 
@@ -244,11 +421,11 @@ const BuilderContent = () => {
                     /* A4 page setup */
                     @page {
                         size: A4;
-                        margin: 15mm 0; /* Margin 15mm atas bawah di semua halaman, semua template */
+                        margin: 0; /* Margin 0 untuk menghilangkan header/footer bawaan browser seperti URL localhost */
                     }
                     ${resumeData.template === 'professional' ? `
                     @page :first {
-                        margin-top: 0; /* Halaman pertama Professional: margin atas tetap 0 sesuai format */
+                        margin-top: 0; 
                     }` : ''}
                     /* The resume paper element */
                     .resume-paper {
@@ -259,6 +436,8 @@ const BuilderContent = () => {
                         transform: none !important;
                         margin: 0 !important;
                         page-break-after: auto;
+                        padding-top: 15mm !important; /* Tambahan padding karena margin page 0 */
+                        padding-bottom: 15mm !important;
                     }
                     /* Preserve colors */
                     * {
