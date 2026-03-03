@@ -98,7 +98,14 @@ const ResumePreview = () => {
     const TemplateComponent = TEMPLATE_MAP[selectedTemplate] || ModernTemplate;
 
     const isProfessional = selectedTemplate === 'professional';
+    const customSections = Array.isArray(resumeData.customSections) ? resumeData.customSections : [];
     const sectionOrder = resumeData.sectionOrder || DEFAULT_SECTION_ORDER;
+
+    // Build labels map that includes custom sections
+    const allSectionLabels = { ...SECTION_LABELS };
+    customSections.forEach(cs => {
+        allSectionLabels[cs.id] = cs.name || 'Custom Section';
+    });
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
@@ -307,7 +314,7 @@ const ResumePreview = () => {
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                         <SortableContext items={sectionOrder} strategy={verticalListSortingStrategy}>
                             {sectionOrder.map((sectionKey) => (
-                                <SortableSection key={sectionKey} id={sectionKey} label={SECTION_LABELS[sectionKey] || sectionKey} />
+                                <SortableSection key={sectionKey} id={sectionKey} label={allSectionLabels[sectionKey] || sectionKey} />
                             ))}
                         </SortableContext>
                     </DndContext>

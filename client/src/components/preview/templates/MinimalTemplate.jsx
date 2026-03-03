@@ -19,9 +19,11 @@ const MD = ({ content }) => {
     if (!content) return null;
     return (
         <SafeMarkdown content={content}>
-            <ReactMarkdown rehypePlugins={[rehypeRaw]} className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-1 leading-snug">
-                {content}
-            </ReactMarkdown>
+            <div className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-1 leading-snug">
+                <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                    {content}
+                </ReactMarkdown>
+            </div>
         </SafeMarkdown>
     );
 };
@@ -36,6 +38,7 @@ const fmtDate = (d) => {
 const MinimalTemplate = ({ data }) => {
     const { personalInfo = {}, summary = '', experience = [], education = [], skills = [],
         organizations = [], languages = [], courses = [], references = [], certifications = [],
+        customSections = [],
         themeColor, textColor, font, language, showPhoto, photoShape, photoOutline } = data || {};
     const txtColor = textColor || '#000000';
     const shouldShowPhoto = showPhoto !== false;
@@ -251,6 +254,58 @@ const MinimalTemplate = ({ data }) => {
                     </div>
                 </section>
             )}
+
+            {/* Custom Sections */}
+            {(Array.isArray(customSections) ? customSections : []).map((section) => {
+                if (section.type === 'paragraph_like' && section.description) {
+                    return (
+                        <section key={section.id} className="mt-6">
+                            <SectionTitle title={section.name?.toUpperCase()} />
+                            <div className="text-sm text-gray-600 leading-relaxed">
+                                <MD content={section.description} />
+                            </div>
+                        </section>
+                    );
+                }
+                if (section.type === 'skill_like' && section.items?.length > 0) {
+                    return (
+                        <section key={section.id} className="mt-6">
+                            <SectionTitle title={section.name?.toUpperCase()} />
+                            <div className="space-y-2">
+                                {section.items.map((item, idx) => (
+                                    <div key={item?.id || idx} className="flex justify-between items-center">
+                                        <span className="text-xs text-gray-700">{item?.name}</span>
+                                        {item?.level && <span className="text-xs text-gray-400">{item.level}</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    );
+                }
+                if (section.type === 'experience_like' && section.items?.length > 0) {
+                    return (
+                        <section key={section.id} className="mt-6">
+                            <SectionTitle title={section.name?.toUpperCase()} />
+                            <div className="space-y-4">
+                                {section.items.map((item, idx) => (
+                                    <div key={item?.id || idx} className="grid grid-cols-4 gap-4" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                        <div className="text-xs text-gray-400 pt-0.5">{item?.date}</div>
+                                        <div className="col-span-3">
+                                            <div className="flex justify-between">
+                                                <h3 className="text-sm font-semibold text-gray-900">{item?.title}</h3>
+                                                <span className="text-xs text-gray-400">{item?.city}</span>
+                                            </div>
+                                            <div className="text-xs mb-1" style={{ color }}>{item?.subtitle}</div>
+                                            <div className="text-xs text-gray-600 leading-relaxed" style={textAlignStyle}><MD content={item?.description} /></div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    );
+                }
+                return null;
+            })}
         </div>
     );
 };

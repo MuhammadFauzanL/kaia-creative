@@ -41,9 +41,11 @@ const MarkdownRenderer = ({ content }) => {
     if (!content) return null;
     return (
         <SafeMarkdown content={content}>
-            <ReactMarkdown rehypePlugins={[rehypeRaw]} className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-0 leading-snug break-words">
-                {content}
-            </ReactMarkdown>
+            <div className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-0 leading-snug break-words">
+                <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                    {content}
+                </ReactMarkdown>
+            </div>
         </SafeMarkdown>
     );
 };
@@ -61,6 +63,7 @@ const ProfessionalTemplate = ({ data }) => {
         courses = [],
         references = [],
         certifications = [],
+        customSections = [],
         font,
         language,
         sectionOrder = ['education', 'experience', 'organizations', 'certifications', 'languages', 'skills', 'courses', 'references'],
@@ -297,6 +300,71 @@ const ProfessionalTemplate = ({ data }) => {
         references: renderReferences,
     };
 
+    const safeCustomSections = Array.isArray(customSections) ? customSections : [];
+    safeCustomSections.forEach((section) => {
+        sectionRenderers[section.id] = () => {
+            if (section.type === 'paragraph_like' && section.description) {
+                return (
+                    <section className="mb-3 border-b border-black pb-2 border-opacity-50">
+                        <div className="flex gap-4">
+                            <div className="w-[140px] shrink-0 text-left">
+                                <h2 className="text-sm font-semibold uppercase tracking-widest text-black">{section.name?.toUpperCase()}</h2>
+                            </div>
+                            <div className="flex-1 text-sm leading-relaxed text-black text-justify -mt-0.5">
+                                <MarkdownRenderer content={section.description} />
+                            </div>
+                        </div>
+                    </section>
+                );
+            }
+            if (section.type === 'skill_like' && section.items?.length > 0) {
+                return (
+                    <section className="mb-3 border-b border-black pb-2 border-opacity-50">
+                        <div className="flex gap-4">
+                            <div className="w-[140px] shrink-0 text-left">
+                                <h2 className="text-sm font-semibold uppercase tracking-widest text-black">{section.name?.toUpperCase()}</h2>
+                            </div>
+                            <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-1">
+                                {section.items.map((item, index) => (
+                                    <div key={item?.id || index} className="text-sm text-black">
+                                        <span className="font-semibold">{item?.name}</span>
+                                        {item?.level && <span className="text-black ml-1">({item.level})</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                );
+            }
+            if (section.type === 'experience_like' && section.items?.length > 0) {
+                return (
+                    <TightSectionLayout
+                        title={section.name?.toUpperCase()}
+                        items={section.items}
+                        renderItem={(item) => ({
+                            date: <>{item?.date}</>,
+                            content: (
+                                <>
+                                    <div className="flex justify-between items-baseline mb-0.5">
+                                        <h3 className="text-base font-medium text-black">{item?.title}</h3>
+                                        <span className="text-sm text-black">{item?.city}</span>
+                                    </div>
+                                    <div className="text-sm text-black mb-1">{item?.subtitle}</div>
+                                    {item?.description && (
+                                        <div className="text-sm text-black leading-snug text-justify">
+                                            <MarkdownRenderer content={item.description} />
+                                        </div>
+                                    )}
+                                </>
+                            )
+                        })}
+                    />
+                );
+            }
+            return null;
+        };
+    });
+
     return (
         <div className="w-full h-full bg-white text-black" style={{ ...fontStyle, padding: '1cm 1.5cm 1cm 1.5cm' }}>
             <style>{`
@@ -335,7 +403,7 @@ const ProfessionalTemplate = ({ data }) => {
                         personalInfo?.website
                     ].filter(Boolean).map((info, index, arr) => (
                         <span key={`${index}-${String(info).substring(0, 10)}`}>
-                            {String(info).includes('http') ? <a href={String(info)} target="_blank" rel="noopener noreferrer" className="text-black no-underline hover:text-gray-700">{info}</a> : info}{index < arr.length - 1 && ","}
+                            {String(info).includes('http') ? <a href={String(info)} target="_blank" rel="noopener noreferrer" className="text-black no-underline hover:text-gray-700">{String(info).trim()}</a> : String(info).trim()}{index < arr.length - 1 && ","}
                         </span>
                     ))}
                 </div>

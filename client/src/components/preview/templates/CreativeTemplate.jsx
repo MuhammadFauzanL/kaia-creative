@@ -21,9 +21,11 @@ const MD = ({ content }) => {
     if (!content) return null;
     return (
         <SafeMarkdown content={content}>
-            <ReactMarkdown rehypePlugins={[rehypeRaw]} className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-1 leading-snug">
-                {content}
-            </ReactMarkdown>
+            <div className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-1 leading-snug">
+                <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                    {content}
+                </ReactMarkdown>
+            </div>
         </SafeMarkdown>
     );
 };
@@ -48,6 +50,7 @@ const CreativeTemplate = ({ data }) => {
         courses = [],
         references = [],
         certifications = [],
+        customSections = [],
         themeColor,
         textColor,
         font,
@@ -301,6 +304,53 @@ const CreativeTemplate = ({ data }) => {
                         ))}
                     </MainSection>
                 )}
+
+                {/* Custom Sections */}
+                {(Array.isArray(customSections) ? customSections : []).map((section) => {
+                    if (section.type === 'paragraph_like' && section.description) {
+                        return (
+                            <MainSection key={section.id} title={section.name}>
+                                <div className="text-xs leading-relaxed" style={{ color: txtColor }}>
+                                    <MD content={section.description} />
+                                </div>
+                            </MainSection>
+                        );
+                    }
+                    if (section.type === 'skill_like' && section.items?.length > 0) {
+                        return (
+                            <MainSection key={section.id} title={section.name}>
+                                <div className="flex flex-wrap gap-1">
+                                    {section.items.map((item, idx) => (
+                                        <span key={item?.id || idx} className="text-xs px-2 py-0.5 rounded-full border" style={{ borderColor: `${color}40`, color: txtColor }}>
+                                            {item?.name}{item?.level ? ` (${item.level})` : ''}
+                                        </span>
+                                    ))}
+                                </div>
+                            </MainSection>
+                        );
+                    }
+                    if (section.type === 'experience_like' && section.items?.length > 0) {
+                        return (
+                            <MainSection key={section.id} title={section.name}>
+                                <div className="space-y-4">
+                                    {section.items.map((item, idx) => (
+                                        <div key={item?.id || idx} className="relative pl-4" style={{ borderLeft: `2px solid ${color}20`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                            <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full border-2" style={{ backgroundColor: 'white', borderColor: color }} />
+                                            <div className="flex justify-between items-baseline mb-0.5">
+                                                <h3 className="text-sm font-semibold" style={{ color: txtColor }}>{item?.title}</h3>
+                                                <span className="text-xs text-gray-400">{item?.city}</span>
+                                            </div>
+                                            <div className="text-xs font-medium mb-0.5" style={{ color }}>{item?.subtitle}</div>
+                                            <div className="text-xs text-gray-400 mb-1">{item?.date}</div>
+                                            <div className="text-xs" style={{ ...textAlignStyle, color: txtColor }}><MD content={item?.description} /></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </MainSection>
+                        );
+                    }
+                    return null;
+                })}
             </div>
         </div>
     );

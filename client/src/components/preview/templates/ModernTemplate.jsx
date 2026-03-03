@@ -21,9 +21,11 @@ const MD = ({ content }) => {
     if (!content) return null;
     return (
         <SafeMarkdown content={content}>
-            <ReactMarkdown rehypePlugins={[rehypeRaw]} className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-1 leading-snug">
-                {content}
-            </ReactMarkdown>
+            <div className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-1 leading-snug">
+                <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                    {content}
+                </ReactMarkdown>
+            </div>
         </SafeMarkdown>
     );
 };
@@ -48,6 +50,7 @@ const ModernTemplate = ({ data }) => {
         courses = [],
         references = [],
         certifications = [],
+        customSections = [],
         themeColor,
         textColor,
         font,
@@ -259,6 +262,64 @@ const ModernTemplate = ({ data }) => {
                             </div>
                         </section>
                     )}
+
+                    {/* Custom Sections */}
+                    {(Array.isArray(customSections) ? customSections : []).map((section) => {
+                        if (section.type === 'paragraph_like' && section.description) {
+                            return (
+                                <section key={section.id}>
+                                    <h2 className="text-lg uppercase tracking-wider mb-2" style={{ color }}>{section.name}</h2>
+                                    <div className="text-gray-700 leading-relaxed text-sm pl-4">
+                                        <MD content={section.description} />
+                                    </div>
+                                </section>
+                            );
+                        }
+                        if (section.type === 'skill_like' && section.items?.length > 0) {
+                            return (
+                                <section key={section.id}>
+                                    <h2 className="text-lg uppercase tracking-wider mb-4 border-b-2 inline-block pb-1"
+                                        style={{ color, borderColor: color }}>{section.name}</h2>
+                                    <div className="space-y-2 pl-4">
+                                        {section.items.map((item, idx) => (
+                                            <div key={item?.id || idx} className="flex justify-between text-sm">
+                                                <span className="font-semibold" style={{ color: txtColor }}>{item?.name}</span>
+                                                {item?.level && <span className="text-gray-500">{item.level}</span>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            );
+                        }
+                        if (section.type === 'experience_like' && section.items?.length > 0) {
+                            return (
+                                <section key={section.id}>
+                                    <h2 className="text-lg uppercase tracking-wider mb-4 border-b-2 inline-block pb-1"
+                                        style={{ color, borderColor: color }}>{section.name}</h2>
+                                    <div className="space-y-6">
+                                        {section.items.map((item, idx) => (
+                                            <div key={item?.id || idx} className="flex flex-col sm:flex-row gap-4" style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                                <div className="sm:w-1/4 flex-shrink-0">
+                                                    <div className="text-sm font-semibold text-gray-600">{item?.date}</div>
+                                                </div>
+                                                <div className="sm:w-3/4">
+                                                    <div className="flex justify-between items-baseline mb-1">
+                                                        <h3 className="font-bold text-lg" style={{ color: txtColor }}>{item?.title}</h3>
+                                                        <span className="text-sm text-gray-500">{item?.city}</span>
+                                                    </div>
+                                                    <div className="text-sm font-medium text-gray-700 mb-2">{item?.subtitle}</div>
+                                                    <div className="text-sm text-gray-700 leading-relaxed pl-0" style={textAlignStyle}>
+                                                        <MD content={item?.description} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            );
+                        }
+                        return null;
+                    })}
                 </div>
 
                 <div className="col-span-4 space-y-6">

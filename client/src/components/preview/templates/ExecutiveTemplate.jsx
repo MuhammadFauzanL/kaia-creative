@@ -16,9 +16,11 @@ const MD = ({ content }) => {
     if (!content) return null;
     return (
         <SafeMarkdown content={content}>
-            <ReactMarkdown rehypePlugins={[rehypeRaw]} className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-1 leading-snug">
-                {content}
-            </ReactMarkdown>
+            <div className="prose prose-sm max-w-none prose-p:my-0 prose-ul:my-1 leading-snug">
+                <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                    {content}
+                </ReactMarkdown>
+            </div>
         </SafeMarkdown>
     );
 };
@@ -34,6 +36,7 @@ const fmtDate = (d) => {
 const ExecutiveTemplate = ({ data }) => {
     const { personalInfo = {}, summary = '', experience = [], education = [], skills = [],
         organizations = [], languages = [], courses = [], references = [], certifications = [],
+        customSections = [],
         themeColor, textColor, font, language } = data || {};
 
     const color = themeColor || '#1B2A4A';
@@ -172,6 +175,58 @@ const ExecutiveTemplate = ({ data }) => {
                             </div>
                         </>
                     )}
+
+                    {/* Custom Sections */}
+                    {(Array.isArray(customSections) ? customSections : []).map((section) => {
+                        if (section.type === 'paragraph_like' && section.description) {
+                            return (
+                                <React.Fragment key={section.id}>
+                                    <SectionTitle title={section.name?.toUpperCase()} />
+                                    <div className="text-xs text-gray-700 leading-relaxed text-justify">
+                                        <MD content={section.description} />
+                                    </div>
+                                </React.Fragment>
+                            );
+                        }
+                        if (section.type === 'skill_like' && section.items?.length > 0) {
+                            return (
+                                <React.Fragment key={section.id}>
+                                    <SectionTitle title={section.name?.toUpperCase()} />
+                                    <div className="space-y-1">
+                                        {section.items.map((item, idx) => (
+                                            <div key={item?.id || idx} className="flex justify-between text-xs">
+                                                <span className="font-semibold text-gray-800">{item?.name}</span>
+                                                {item?.level && <span className="text-gray-500">{item.level}</span>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </React.Fragment>
+                            );
+                        }
+                        if (section.type === 'experience_like' && section.items?.length > 0) {
+                            return (
+                                <React.Fragment key={section.id}>
+                                    <SectionTitle title={section.name?.toUpperCase()} />
+                                    <div className="space-y-4">
+                                        {section.items.map((item, idx) => (
+                                            <div key={item?.id || idx} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                                <div className="flex justify-between items-baseline">
+                                                    <h3 className="text-sm font-bold text-gray-900">{item?.title}</h3>
+                                                    <span className="text-xs text-gray-500 ml-2 whitespace-nowrap">{item?.city}</span>
+                                                </div>
+                                                <div className="flex justify-between items-baseline mb-1">
+                                                    <div className="text-xs font-semibold italic" style={{ color }}>{item?.subtitle}</div>
+                                                    <div className="text-xs text-gray-500 whitespace-nowrap">{item?.date}</div>
+                                                </div>
+                                                <div className="text-xs text-gray-600 leading-relaxed" style={textAlignStyle}><MD content={item?.description} /></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </React.Fragment>
+                            );
+                        }
+                        return null;
+                    })}
                 </div>
 
                 {/* Right sidebar */}

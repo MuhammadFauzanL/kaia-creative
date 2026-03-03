@@ -42,6 +42,7 @@ const INITIAL_STATE = {
     courses: [],
     references: [],
     certifications: [],
+    customSections: [],
     themeColor: '#007BFF',
     textColor: '#000000',
     template: 'modern',
@@ -74,6 +75,7 @@ export const ResumeProvider = ({ children }) => {
                 courses: ensureArray(data.courses),
                 references: ensureArray(data.references),
                 certifications: ensureArray(data.certifications),
+                customSections: ensureArray(data.customSections),
                 sectionOrder: Array.isArray(data.sectionOrder) && data.sectionOrder.length > 0
                     ? data.sectionOrder
                     : DEFAULT_SECTION_ORDER,
