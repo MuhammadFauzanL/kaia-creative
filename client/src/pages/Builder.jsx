@@ -92,108 +92,179 @@ const BuilderContent = () => {
     const handleDownloadWord = () => {
         setShowDownloadMenu(false);
 
-        // Get the resume preview element
-        const resumePaper = document.querySelector('.resume-paper');
-        if (!resumePaper) {
-            alert('Resume preview not found. Please try again.');
-            return;
-        }
+        const d = resumeData;
+        const pi = d.personalInfo || {};
+        const font = d.font || 'Times New Roman';
+        const fileName = pi.firstName ? `${pi.firstName}_Resume` : 'Resume';
 
-        // Clone to avoid modifying the live DOM
-        const clone = resumePaper.cloneNode(true);
+        // Helper to escape HTML
+        const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-        // Collect all computed styles from stylesheets
-        const styleSheets = Array.from(document.styleSheets);
-        let allCSS = '';
-        styleSheets.forEach(sheet => {
-            try {
-                const rules = Array.from(sheet.cssRules || []);
-                rules.forEach(rule => {
-                    allCSS += rule.cssText + '\n';
-                });
-            } catch (e) {
-                // Cross-origin stylesheets can't be read
-            }
-        });
-
-        // Build inline styles for every element so Word can read them
-        const applyInlineStyles = (source, target) => {
-            const computed = window.getComputedStyle(source);
-            const importantProps = [
-                'color', 'background-color', 'background',
-                'font-family', 'font-size', 'font-weight', 'font-style',
-                'text-align', 'text-decoration', 'text-transform',
-                'line-height', 'letter-spacing',
-                'margin', 'margin-top', 'margin-bottom', 'margin-left', 'margin-right',
-                'padding', 'padding-top', 'padding-bottom', 'padding-left', 'padding-right',
-                'border', 'border-top', 'border-bottom', 'border-left', 'border-right',
-                'border-color', 'border-width', 'border-style', 'border-radius',
-                'width', 'max-width', 'min-width',
-                'display', 'flex-direction', 'justify-content', 'align-items', 'gap',
-                'list-style-type', 'white-space', 'word-break', 'overflow-wrap'
-            ];
-            let inlineStyle = '';
-            importantProps.forEach(prop => {
-                const val = computed.getPropertyValue(prop);
-                if (val && val !== '' && val !== 'none' && val !== 'normal' && val !== 'auto') {
-                    inlineStyle += `${prop}:${val};`;
+        // Helper to render markdown-like content for Word (basic: bold, italic, lists)
+        const renderDesc = (text) => {
+            if (!text) return '';
+            // Convert markdown bold/italic
+            let html = esc(text);
+            html = html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+            html = html.replace(/\*(.+?)\*/g, '<i>$1</i>');
+            // Convert markdown lists
+            const lines = html.split('\n');
+            let result = '';
+            let inList = false;
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+                    if (!inList) { result += '<ul>'; inList = true; }
+                    result += `<li>${trimmed.substring(2)}</li>`;
+                } else {
+                    if (inList) { result += '</ul>'; inList = false; }
+                    if (trimmed) result += `<p style="margin:2px 0;">${trimmed}</p>`;
                 }
             });
-            target.setAttribute('style', (target.getAttribute('style') || '') + inlineStyle);
-
-            const sourceChildren = source.children;
-            const targetChildren = target.children;
-            for (let i = 0; i < sourceChildren.length && i < targetChildren.length; i++) {
-                applyInlineStyles(sourceChildren[i], targetChildren[i]);
-            }
+            if (inList) result += '</ul>';
+            return result;
         };
 
-        applyInlineStyles(resumePaper, clone);
+        // Build sections
+        let body = '';
 
-        const fileName = resumeData.personalInfo?.firstName
-            ? `${resumeData.personalInfo.firstName}_Resume`
-            : 'Resume';
+        // --- HEADER ---
+        const fullName = [pi.firstName, pi.lastName].filter(Boolean).join(' ');
+        body += `<div style="text-align:center;margin-bottom:10px;">`;
+        if (fullName) body += `<h1 style="font-size:22pt;margin:0;font-weight:normal;">${esc(fullName)}${pi.jobTitle ? ` <span style="color:#555;">| ${esc(pi.jobTitle)}</span>` : ''}</h1>`;
+        const contactParts = [pi.email, pi.phone, [pi.city, pi.country].filter(Boolean).join(', '), pi.linkedin, pi.website].filter(Boolean);
+        if (contactParts.length > 0) {
+            body += `<p style="font-size:10pt;color:#333;margin:4px 0;">${contactParts.map(c => esc(String(c).trim())).join(', ')}</p>`;
+        }
+        body += `</div><hr style="border:1px solid #ccc;">`;
 
-        // Create Word-compatible HTML document
-        const htmlContent = `
-            <html xmlns:o="urn:schemas-microsoft-com:office:office"
-                  xmlns:w="urn:schemas-microsoft-com:office:word"
-                  xmlns="http://www.w3.org/TR/REC-html40">
-            <head>
-                <meta charset="utf-8">
-                <title>${fileName}</title>
-                <!--[if gte mso 9]>
-                <xml>
-                    <w:WordDocument>
-                        <w:View>Print</w:View>
-                        <w:Zoom>100</w:Zoom>
-                        <w:DoNotOptimizeForBrowser/>
-                    </w:WordDocument>
-                </xml>
-                <![endif]-->
-                <style>
-                    @page {
-                        size: A4;
-                        margin: 1cm;
+        // --- SUMMARY ---
+        if (d.summary) {
+            body += `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #999;padding-bottom:3px;margin-top:12px;">Profile</h2>`;
+            body += `<p style="font-size:10pt;text-align:justify;">${renderDesc(d.summary)}</p>`;
+        }
+
+        // --- Helper for experience-like sections ---
+        const renderExpSection = (title, items) => {
+            if (!items || items.length === 0) return '';
+            let html = `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #999;padding-bottom:3px;margin-top:14px;">${esc(title)}</h2>`;
+            items.forEach(item => {
+                html += `<div style="margin-bottom:10px;">`;
+                // Row 1: Title + City
+                html += `<table width="100%" style="border:none;border-collapse:collapse;"><tr>`;
+                html += `<td style="border:none;padding:0;"><b style="font-size:11pt;">${esc(item?.title || item?.degree || '')}</b></td>`;
+                html += `<td style="border:none;padding:0;text-align:right;font-size:9pt;color:#666;">${esc(item?.city || item?.location || '')}</td>`;
+                html += `</tr></table>`;
+                // Row 2: Subtitle + Date
+                html += `<table width="100%" style="border:none;border-collapse:collapse;"><tr>`;
+                html += `<td style="border:none;padding:0;font-size:10pt;color:#555;">${esc(item?.subtitle || item?.employer || item?.school || '')}</td>`;
+                const dateStr = [item?.startDate || item?.date, item?.endDate].filter(Boolean).join(' — ');
+                html += `<td style="border:none;padding:0;text-align:right;font-size:9pt;color:#666;">${esc(dateStr)}</td>`;
+                html += `</tr></table>`;
+                // Description
+                if (item?.description) {
+                    html += `<div style="font-size:10pt;margin-top:3px;">${renderDesc(item.description)}</div>`;
+                }
+                html += `</div>`;
+            });
+            return html;
+        };
+
+        // --- Helper for skill-like sections ---
+        const renderSkillSection = (title, items, nameKey = 'name', levelKey = 'level') => {
+            if (!items || items.length === 0) return '';
+            let html = `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #999;padding-bottom:3px;margin-top:14px;">${esc(title)}</h2>`;
+            html += `<table width="100%" style="border:none;border-collapse:collapse;">`;
+            items.forEach(item => {
+                html += `<tr>`;
+                html += `<td style="border:none;padding:2px 0;font-size:10pt;">${esc(item?.[nameKey] || '')}</td>`;
+                const lvl = item?.[levelKey] || '';
+                if (lvl) html += `<td style="border:none;padding:2px 0;font-size:9pt;text-align:right;color:#666;">${esc(lvl)}</td>`;
+                html += `</tr>`;
+            });
+            html += `</table>`;
+            return html;
+        };
+
+        // --- RENDER SECTIONS in order ---
+        const sectionOrder = d.sectionOrder || ['education', 'experience', 'organizations', 'certifications', 'languages', 'skills', 'courses', 'references'];
+
+        sectionOrder.forEach(key => {
+            if (key === 'experience' && d.experience?.length > 0) {
+                body += renderExpSection('Experience', d.experience);
+            } else if (key === 'education' && d.education?.length > 0) {
+                body += renderExpSection('Education', d.education);
+            } else if (key === 'skills' && d.skills?.length > 0) {
+                body += renderSkillSection('Skills', d.skills, 'name', 'level');
+            } else if (key === 'languages' && d.languages?.length > 0) {
+                body += renderSkillSection('Languages', d.languages, 'language', 'level');
+            } else if (key === 'organizations' && d.organizations?.length > 0) {
+                body += renderExpSection('Organizations', d.organizations);
+            } else if (key === 'certifications' && d.certifications?.length > 0) {
+                body += renderExpSection('Certifications', d.certifications);
+            } else if (key === 'courses' && d.courses?.length > 0) {
+                body += renderExpSection('Courses', d.courses);
+            } else if (key === 'references' && d.references?.length > 0) {
+                let html = `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #999;padding-bottom:3px;margin-top:14px;">References</h2>`;
+                d.references.forEach(ref => {
+                    html += `<p style="font-size:10pt;margin:4px 0;"><b>${esc(ref?.name || '')}</b>`;
+                    if (ref?.company) html += ` — ${esc(ref.company)}`;
+                    if (ref?.phone) html += ` | ${esc(ref.phone)}`;
+                    if (ref?.email) html += ` | ${esc(ref.email)}`;
+                    html += `</p>`;
+                });
+                body += html;
+            } else {
+                // Custom sections
+                const cs = (d.customSections || []).find(s => s.id === key);
+                if (cs) {
+                    if (cs.type === 'paragraph_like' && cs.description) {
+                        body += `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #999;padding-bottom:3px;margin-top:14px;">${esc(cs.name)}</h2>`;
+                        body += `<div style="font-size:10pt;">${renderDesc(cs.description)}</div>`;
+                    } else if (cs.type === 'skill_like' && cs.items?.length > 0) {
+                        body += renderSkillSection(cs.name, cs.items, 'name', 'level');
+                    } else if (cs.type === 'experience_like' && cs.items?.length > 0) {
+                        body += renderExpSection(cs.name, cs.items);
                     }
-                    body {
-                        font-family: 'Times New Roman', serif;
-                        margin: 0;
-                        padding: 0;
-                    }
-                    ${allCSS}
-                </style>
-            </head>
-            <body>
-                ${clone.outerHTML}
-            </body>
-            </html>
-        `;
-
-        const blob = new Blob(['\ufeff', htmlContent], {
-            type: 'application/msword'
+                }
+            }
         });
 
+        // --- BUILD WORD DOCUMENT ---
+        const htmlContent = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+    <meta charset="utf-8">
+    <title>${esc(fileName)}</title>
+    <!--[if gte mso 9]>
+    <xml>
+        <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>100</w:Zoom>
+            <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+    </xml>
+    <![endif]-->
+    <style>
+        @page { size: A4; margin: 2cm 2.5cm; }
+        body { font-family: '${font}', 'Times New Roman', serif; margin: 0; padding: 0; color: #000; }
+        h1 { font-family: '${font}', 'Times New Roman', serif; }
+        h2 { font-family: '${font}', 'Times New Roman', serif; margin-bottom: 6px; }
+        p { margin: 2px 0; }
+        ul { margin: 4px 0; padding-left: 20px; }
+        li { font-size: 10pt; margin: 2px 0; }
+        table { border: none; }
+        td { vertical-align: top; }
+    </style>
+</head>
+<body>
+    ${body}
+</body>
+</html>`;
+
+        const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
