@@ -148,25 +148,41 @@ const BuilderContent = () => {
         const renderExpSection = (title, items) => {
             if (!items || items.length === 0) return '';
             let html = `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #999;padding-bottom:3px;margin-top:14px;">${esc(title)}</h2>`;
+            html += `<table width="100%" style="border:none;border-collapse:collapse;table-layout:fixed;">`;
             items.forEach(item => {
-                html += `<div style="margin-bottom:10px;">`;
-                // Row 1: Title + City
+                const mainTitle = item?.title || item?.jobTitle || item?.position || item?.degree || item?.name || '';
+                const mapSub = item?.employer || item?.school || item?.company || item?.subtitle || item?.institution || '';
+
+                // Format tanggal agar sesuai dengan struktur ProfessionalTemplate
+                let dateStr = '';
+                if (item?.startDate && item?.endDate) dateStr = `${item.startDate} — ${item.endDate}`;
+                else if (item?.startDate) dateStr = `${item.startDate} — Present`;
+                else if (item?.date) dateStr = item.date;
+
+                html += `<tr>`;
+
+                // Kolom kiri (Tanggal)
+                html += `<td width="140" style="width:140px;border:none;padding:0 15px 10px 0;font-size:10pt;color:#333;vertical-align:top;"><b>${esc(dateStr)}</b></td>`;
+
+                // Kolom kanan (Isi)
+                html += `<td style="border:none;padding:0 0 10px 0;vertical-align:top;">`;
+
                 html += `<table width="100%" style="border:none;border-collapse:collapse;"><tr>`;
-                html += `<td style="border:none;padding:0;"><b style="font-size:11pt;">${esc(item?.title || item?.degree || '')}</b></td>`;
+                html += `<td style="border:none;padding:0;"><b style="font-size:11pt;">${esc(mainTitle)}</b></td>`;
                 html += `<td style="border:none;padding:0;text-align:right;font-size:9pt;color:#666;">${esc(item?.city || item?.location || '')}</td>`;
                 html += `</tr></table>`;
-                // Row 2: Subtitle + Date
-                html += `<table width="100%" style="border:none;border-collapse:collapse;"><tr>`;
-                html += `<td style="border:none;padding:0;font-size:10pt;color:#555;">${esc(item?.subtitle || item?.employer || item?.school || '')}</td>`;
-                const dateStr = [item?.startDate || item?.date, item?.endDate].filter(Boolean).join(' — ');
-                html += `<td style="border:none;padding:0;text-align:right;font-size:9pt;color:#666;">${esc(dateStr)}</td>`;
-                html += `</tr></table>`;
-                // Description
+
+                if (mapSub) {
+                    html += `<div style="font-size:10pt;color:#555;margin:2px 0;">${esc(mapSub)}</div>`;
+                }
+
                 if (item?.description) {
                     html += `<div style="font-size:10pt;margin-top:3px;">${renderDesc(item.description)}</div>`;
                 }
-                html += `</div>`;
+
+                html += `</td></tr>`;
             });
+            html += `</table>`;
             return html;
         };
 
