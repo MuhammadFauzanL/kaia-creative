@@ -81,7 +81,10 @@ const TechTemplate = ({ data }) => {
     ].filter(Boolean);
 
     return (
-        <div className="w-full h-full bg-white flex" style={fontStyle}>
+        <div className="w-full min-h-[29.7cm] bg-white relative" style={fontStyle}>
+            {/* Fixed background for the left sidebar to print on all pages */}
+            <div className="hidden print:block fixed left-0 bottom-0 top-0 w-[38%]" style={{ backgroundColor: bgDark, zIndex: 0 }} />
+
             <style>{`
                 @media print {
                     * {
@@ -91,222 +94,225 @@ const TechTemplate = ({ data }) => {
                     }
                 }
             `}</style>
-            {/* Left dark sidebar */}
-            <div className="w-[38%] min-h-full p-6" style={{ backgroundColor: bgDark }}>
-                {/* Name */}
-                <div className="mb-5">
-                    <div className="text-xs mb-1" style={{ color: `${color}80` }}>{'> whoami'}</div>
-                    <h1 className="text-xl font-bold text-white leading-tight">
-                        {personalInfo.firstName}<br />{personalInfo.lastName}
-                    </h1>
-                    {personalInfo.jobTitle && (
-                        <div className="text-xs mt-1" style={{ color }}>
-                            {'<'}{personalInfo.jobTitle}{'/>'}
+
+            <div className="flex w-full min-h-full relative z-10">
+                {/* Left dark sidebar */}
+                <div className="w-[38%] p-6 flex-shrink-0" style={{ backgroundColor: bgDark }}>
+                    {/* Name */}
+                    <div className="mb-5">
+                        <div className="text-xs mb-1" style={{ color: `${color}80` }}>{'> whoami'}</div>
+                        <h1 className="text-xl font-bold text-white leading-tight">
+                            {personalInfo.firstName}<br />{personalInfo.lastName}
+                        </h1>
+                        {personalInfo.jobTitle && (
+                            <div className="text-xs mt-1" style={{ color }}>
+                                {'<'}{personalInfo.jobTitle}{'/>'}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Contact */}
+                    <div className="mb-5">
+                        <div className="text-xs mb-2 font-bold tracking-widest" style={{ color }}>// CONTACT</div>
+                        {contacts.map((c, i) => (
+                            <div key={i} className="mb-1.5">
+                                <div className="text-xs" style={{ color: `${color}70` }}>{c.label}:</div>
+                                <div className="text-xs text-gray-300 break-all">
+                                    {String(c.value).includes('http')
+                                        ? <a href={String(c.value)} target="_blank" rel="noopener noreferrer" style={{ color }} className="no-underline">{c.value}</a>
+                                        : c.value}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Skills */}
+                    {skills?.length > 0 && (
+                        <div className="mb-5">
+                            <div className="text-xs mb-2 font-bold tracking-widest" style={{ color }}>// {t.skills}</div>
+                            <div className="flex flex-wrap">
+                                {skills.map((skill, i) => <Tag key={i}>{skill.name}</Tag>)}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Languages */}
+                    {languages?.length > 0 && (
+                        <div className="mb-5">
+                            <div className="text-xs mb-2 font-bold tracking-widest" style={{ color }}>// {t.languages}</div>
+                            {languages.map((l, i) => (
+                                <div key={i} className="flex justify-between text-xs mb-1">
+                                    <span className="text-gray-300">{l.language}</span>
+                                    <span style={{ color: `${color}80` }}>{l.level}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Certifications */}
+                    {certifications?.length > 0 && (
+                        <div className="mb-5">
+                            <div className="text-xs mb-2 font-bold tracking-widest" style={{ color }}>// {t.certifications}</div>
+                            {certifications.map((cert, i) => (
+                                <div key={i} className="mb-1.5">
+                                    <div className="text-xs text-white font-semibold">{cert.name}</div>
+                                    <div className="text-xs" style={{ color: `${color}70` }}>{cert.issuer} · {fmtDate(cert.date)}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* References */}
+                    {references?.length > 0 && (
+                        <div>
+                            <div className="text-xs mb-2 font-bold tracking-widest" style={{ color }}>// {t.references}</div>
+                            {references.map((ref, i) => (
+                                <div key={i} className="mb-2">
+                                    <div className="text-xs text-white font-semibold">{ref.name}</div>
+                                    <div className="text-xs text-gray-400">{ref.company}</div>
+                                    <div className="text-xs" style={{ color: `${color}80` }}>{ref.email}</div>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
 
-                {/* Contact */}
-                <div className="mb-5">
-                    <div className="text-xs mb-2 font-bold tracking-widest" style={{ color }}>// CONTACT</div>
-                    {contacts.map((c, i) => (
-                        <div key={i} className="mb-1.5">
-                            <div className="text-xs" style={{ color: `${color}70` }}>{c.label}:</div>
-                            <div className="text-xs text-gray-300 break-all">
-                                {String(c.value).includes('http')
-                                    ? <a href={String(c.value)} target="_blank" rel="noopener noreferrer" style={{ color }} className="no-underline">{c.value}</a>
-                                    : c.value}
+                {/* Right main content */}
+                <div className="w-[62%] px-7 py-5 bg-white">
+                    {summary && (
+                        <>
+                            <SectionTitle title={t.profile} />
+                            <div className="text-xs text-gray-600 leading-relaxed mb-2">
+                                <MD content={summary} />
                             </div>
-                        </div>
-                    ))}
+                        </>
+                    )}
+
+                    {experience?.length > 0 && (
+                        <>
+                            <SectionTitle title={t.experience} />
+                            <div className="space-y-4">
+                                {experience.map((exp, i) => (
+                                    <div key={i} className="relative pl-3" style={{ borderLeft: `2px solid ${color}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                        <div className="flex justify-between items-baseline">
+                                            <h3 className="text-sm font-bold text-gray-900">{exp.jobTitle}</h3>
+                                            <span className="text-xs" style={{ color }}>{exp.city}</span>
+                                        </div>
+                                        <div className="flex justify-between items-baseline mb-1">
+                                            <div className="text-xs font-semibold" style={{ color }}>{exp.employer}</div>
+                                            <div className="text-xs text-gray-400 font-mono">
+                                                {fmtDate(exp.startDate)} → {exp.endDate ? fmtDate(exp.endDate) : t.present}
+                                            </div>
+                                        </div>
+                                        <div className="text-xs text-gray-600 leading-relaxed" style={textAlignStyle}><MD content={exp.description} /></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+
+                    {education?.length > 0 && (
+                        <>
+                            <SectionTitle title={t.education} />
+                            <div className="space-y-3">
+                                {education.map((edu, i) => (
+                                    <div key={i} className="relative pl-3" style={{ borderLeft: `2px solid ${color}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                        <div className="flex justify-between items-baseline">
+                                            <h3 className="text-sm font-bold text-gray-900">{edu.degree}</h3>
+                                            <span className="text-xs text-gray-400 font-mono">
+                                                {fmtDate(edu.startDate)} → {edu.endDate ? fmtDate(edu.endDate) : t.present}
+                                            </span>
+                                        </div>
+                                        <div className="text-xs font-semibold mb-1" style={{ color }}>{edu.school} {edu.city && `· ${edu.city}`}</div>
+                                        <div className="text-xs text-gray-600" style={textAlignStyle}><MD content={edu.description} /></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+
+                    {organizations?.length > 0 && (
+                        <>
+                            <SectionTitle title={t.organizations} />
+                            <div className="space-y-3">
+                                {organizations.map((org, i) => (
+                                    <div key={i} className="relative pl-3" style={{ borderLeft: `2px solid ${color}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                        <div className="flex justify-between items-baseline">
+                                            <h3 className="text-sm font-bold text-gray-900">{org.role}</h3>
+                                            <span className="text-xs text-gray-400 font-mono">
+                                                {fmtDate(org.startDate)} → {org.endDate ? fmtDate(org.endDate) : t.present}
+                                            </span>
+                                        </div>
+                                        <div className="text-xs font-semibold mb-1" style={{ color }}>{org.organization}</div>
+                                        <div className="text-xs text-gray-600" style={textAlignStyle}><MD content={org.description} /></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
+
+                    {courses?.length > 0 && (
+                        <>
+                            <SectionTitle title={t.courses} />
+                            {courses.map((c, i) => (
+                                <div key={i} className="mb-2 pl-3" style={{ borderLeft: `2px solid ${color}` }}>
+                                    <div className="text-xs font-bold text-gray-800">{c.name}</div>
+                                    <div className="text-xs" style={{ color }}>{c.institution}</div>
+                                    <div className="text-xs text-gray-400 font-mono">{c.startDate} → {c.endDate}</div>
+                                </div>
+                            ))}
+                        </>
+                    )}
+
+                    {/* Custom Sections */}
+                    {(Array.isArray(customSections) ? customSections : []).map((section) => {
+                        if (section.type === 'paragraph_like' && section.description) {
+                            return (
+                                <React.Fragment key={section.id}>
+                                    <SectionTitle title={section.name?.toUpperCase()} />
+                                    <div className="text-xs text-gray-600 leading-relaxed mb-2">
+                                        <MD content={section.description} />
+                                    </div>
+                                </React.Fragment>
+                            );
+                        }
+                        if (section.type === 'skill_like' && section.items?.length > 0) {
+                            return (
+                                <React.Fragment key={section.id}>
+                                    <SectionTitle title={section.name?.toUpperCase()} />
+                                    <div className="flex flex-wrap">
+                                        {section.items.map((item, idx) => (
+                                            <Tag key={item?.id || idx}>{item?.name}{item?.level ? ` (${item.level})` : ''}</Tag>
+                                        ))}
+                                    </div>
+                                </React.Fragment>
+                            );
+                        }
+                        if (section.type === 'experience_like' && section.items?.length > 0) {
+                            return (
+                                <React.Fragment key={section.id}>
+                                    <SectionTitle title={section.name?.toUpperCase()} />
+                                    <div className="space-y-4">
+                                        {section.items.map((item, idx) => (
+                                            <div key={item?.id || idx} className="relative pl-3" style={{ borderLeft: `2px solid ${color}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                                <div className="flex justify-between items-baseline">
+                                                    <h3 className="text-sm font-bold text-gray-900">{item?.title}</h3>
+                                                    <span className="text-xs" style={{ color }}>{item?.city}</span>
+                                                </div>
+                                                <div className="flex justify-between items-baseline mb-1">
+                                                    <div className="text-xs font-semibold" style={{ color }}>{item?.subtitle}</div>
+                                                    <div className="text-xs text-gray-400 font-mono">{item?.date}</div>
+                                                </div>
+                                                <div className="text-xs text-gray-600 leading-relaxed" style={textAlignStyle}><MD content={item?.description} /></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </React.Fragment>
+                            );
+                        }
+                        return null;
+                    })}
                 </div>
-
-                {/* Skills */}
-                {skills?.length > 0 && (
-                    <div className="mb-5">
-                        <div className="text-xs mb-2 font-bold tracking-widest" style={{ color }}>// {t.skills}</div>
-                        <div className="flex flex-wrap">
-                            {skills.map((skill, i) => <Tag key={i}>{skill.name}</Tag>)}
-                        </div>
-                    </div>
-                )}
-
-                {/* Languages */}
-                {languages?.length > 0 && (
-                    <div className="mb-5">
-                        <div className="text-xs mb-2 font-bold tracking-widest" style={{ color }}>// {t.languages}</div>
-                        {languages.map((l, i) => (
-                            <div key={i} className="flex justify-between text-xs mb-1">
-                                <span className="text-gray-300">{l.language}</span>
-                                <span style={{ color: `${color}80` }}>{l.level}</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* Certifications */}
-                {certifications?.length > 0 && (
-                    <div className="mb-5">
-                        <div className="text-xs mb-2 font-bold tracking-widest" style={{ color }}>// {t.certifications}</div>
-                        {certifications.map((cert, i) => (
-                            <div key={i} className="mb-1.5">
-                                <div className="text-xs text-white font-semibold">{cert.name}</div>
-                                <div className="text-xs" style={{ color: `${color}70` }}>{cert.issuer} · {fmtDate(cert.date)}</div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* References */}
-                {references?.length > 0 && (
-                    <div>
-                        <div className="text-xs mb-2 font-bold tracking-widest" style={{ color }}>// {t.references}</div>
-                        {references.map((ref, i) => (
-                            <div key={i} className="mb-2">
-                                <div className="text-xs text-white font-semibold">{ref.name}</div>
-                                <div className="text-xs text-gray-400">{ref.company}</div>
-                                <div className="text-xs" style={{ color: `${color}80` }}>{ref.email}</div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Right main content */}
-            <div className="flex-1 px-7 py-5 bg-white">
-                {summary && (
-                    <>
-                        <SectionTitle title={t.profile} />
-                        <div className="text-xs text-gray-600 leading-relaxed mb-2">
-                            <MD content={summary} />
-                        </div>
-                    </>
-                )}
-
-                {experience?.length > 0 && (
-                    <>
-                        <SectionTitle title={t.experience} />
-                        <div className="space-y-4">
-                            {experience.map((exp, i) => (
-                                <div key={i} className="relative pl-3" style={{ borderLeft: `2px solid ${color}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                                    <div className="flex justify-between items-baseline">
-                                        <h3 className="text-sm font-bold text-gray-900">{exp.jobTitle}</h3>
-                                        <span className="text-xs" style={{ color }}>{exp.city}</span>
-                                    </div>
-                                    <div className="flex justify-between items-baseline mb-1">
-                                        <div className="text-xs font-semibold" style={{ color }}>{exp.employer}</div>
-                                        <div className="text-xs text-gray-400 font-mono">
-                                            {fmtDate(exp.startDate)} → {exp.endDate ? fmtDate(exp.endDate) : t.present}
-                                        </div>
-                                    </div>
-                                    <div className="text-xs text-gray-600 leading-relaxed" style={textAlignStyle}><MD content={exp.description} /></div>
-                                </div>
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {education?.length > 0 && (
-                    <>
-                        <SectionTitle title={t.education} />
-                        <div className="space-y-3">
-                            {education.map((edu, i) => (
-                                <div key={i} className="relative pl-3" style={{ borderLeft: `2px solid ${color}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                                    <div className="flex justify-between items-baseline">
-                                        <h3 className="text-sm font-bold text-gray-900">{edu.degree}</h3>
-                                        <span className="text-xs text-gray-400 font-mono">
-                                            {fmtDate(edu.startDate)} → {edu.endDate ? fmtDate(edu.endDate) : t.present}
-                                        </span>
-                                    </div>
-                                    <div className="text-xs font-semibold mb-1" style={{ color }}>{edu.school} {edu.city && `· ${edu.city}`}</div>
-                                    <div className="text-xs text-gray-600" style={textAlignStyle}><MD content={edu.description} /></div>
-                                </div>
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {organizations?.length > 0 && (
-                    <>
-                        <SectionTitle title={t.organizations} />
-                        <div className="space-y-3">
-                            {organizations.map((org, i) => (
-                                <div key={i} className="relative pl-3" style={{ borderLeft: `2px solid ${color}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                                    <div className="flex justify-between items-baseline">
-                                        <h3 className="text-sm font-bold text-gray-900">{org.role}</h3>
-                                        <span className="text-xs text-gray-400 font-mono">
-                                            {fmtDate(org.startDate)} → {org.endDate ? fmtDate(org.endDate) : t.present}
-                                        </span>
-                                    </div>
-                                    <div className="text-xs font-semibold mb-1" style={{ color }}>{org.organization}</div>
-                                    <div className="text-xs text-gray-600" style={textAlignStyle}><MD content={org.description} /></div>
-                                </div>
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {courses?.length > 0 && (
-                    <>
-                        <SectionTitle title={t.courses} />
-                        {courses.map((c, i) => (
-                            <div key={i} className="mb-2 pl-3" style={{ borderLeft: `2px solid ${color}` }}>
-                                <div className="text-xs font-bold text-gray-800">{c.name}</div>
-                                <div className="text-xs" style={{ color }}>{c.institution}</div>
-                                <div className="text-xs text-gray-400 font-mono">{c.startDate} → {c.endDate}</div>
-                            </div>
-                        ))}
-                    </>
-                )}
-
-                {/* Custom Sections */}
-                {(Array.isArray(customSections) ? customSections : []).map((section) => {
-                    if (section.type === 'paragraph_like' && section.description) {
-                        return (
-                            <React.Fragment key={section.id}>
-                                <SectionTitle title={section.name?.toUpperCase()} />
-                                <div className="text-xs text-gray-600 leading-relaxed mb-2">
-                                    <MD content={section.description} />
-                                </div>
-                            </React.Fragment>
-                        );
-                    }
-                    if (section.type === 'skill_like' && section.items?.length > 0) {
-                        return (
-                            <React.Fragment key={section.id}>
-                                <SectionTitle title={section.name?.toUpperCase()} />
-                                <div className="flex flex-wrap">
-                                    {section.items.map((item, idx) => (
-                                        <Tag key={item?.id || idx}>{item?.name}{item?.level ? ` (${item.level})` : ''}</Tag>
-                                    ))}
-                                </div>
-                            </React.Fragment>
-                        );
-                    }
-                    if (section.type === 'experience_like' && section.items?.length > 0) {
-                        return (
-                            <React.Fragment key={section.id}>
-                                <SectionTitle title={section.name?.toUpperCase()} />
-                                <div className="space-y-4">
-                                    {section.items.map((item, idx) => (
-                                        <div key={item?.id || idx} className="relative pl-3" style={{ borderLeft: `2px solid ${color}`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                                            <div className="flex justify-between items-baseline">
-                                                <h3 className="text-sm font-bold text-gray-900">{item?.title}</h3>
-                                                <span className="text-xs" style={{ color }}>{item?.city}</span>
-                                            </div>
-                                            <div className="flex justify-between items-baseline mb-1">
-                                                <div className="text-xs font-semibold" style={{ color }}>{item?.subtitle}</div>
-                                                <div className="text-xs text-gray-400 font-mono">{item?.date}</div>
-                                            </div>
-                                            <div className="text-xs text-gray-600 leading-relaxed" style={textAlignStyle}><MD content={item?.description} /></div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </React.Fragment>
-                        );
-                    }
-                    return null;
-                })}
             </div>
         </div>
     );

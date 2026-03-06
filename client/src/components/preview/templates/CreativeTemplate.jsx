@@ -111,8 +111,9 @@ const CreativeTemplate = ({ data }) => {
     const skillLevel = (level) => level === 'Expert' ? 100 : level === 'Intermediate' ? 65 : 35;
 
     return (
-        <div className="w-full h-full bg-white flex" style={fontStyle}>
-            <style>{`
+        <div className="w-full min-h-full bg-white relative" style={{ ...fontStyle }}>
+            <table className="w-full h-full relative z-10" style={{ tableLayout: 'auto' }}>
+                <style>{`
                 @media print {
                     * {
                         -webkit-print-color-adjust: exact !important;
@@ -121,237 +122,251 @@ const CreativeTemplate = ({ data }) => {
                     }
                 }
             `}</style>
-            {/* Sidebar */}
-            <div className="w-[35%] min-h-full p-6 flex flex-col" style={{ backgroundColor: color }}>
-                {/* Photo or Avatar */}
-                <div className="mb-6">
-                    {shouldShowPhoto && personalInfo?.photoUrl ? (
-                        <img
-                            src={personalInfo.photoUrl}
-                            alt={`${personalInfo.firstName || ''} ${personalInfo.lastName || ''}`}
-                            className="object-cover mb-3 shadow-lg"
-                            style={{ width: photoSizePx, height: photoSizePx, borderRadius: photoRadius, border: photoOutline ? '3px solid rgba(255,255,255,0.6)' : 'none' }}
-                        />
-                    ) : shouldShowPhoto ? (
-                        <div className="bg-white bg-opacity-20 flex items-center justify-center text-white text-3xl font-bold mb-3"
-                            style={{ width: photoSizePx, height: photoSizePx, borderRadius: photoRadius, border: photoOutline ? '2px solid rgba(255,255,255,0.3)' : 'none' }}>
-                            {(personalInfo?.firstName || 'R')[0]}{(personalInfo?.lastName || '')[0]}
-                        </div>
-                    ) : null}
-                    <h1 className="text-xl font-bold text-white leading-tight">
-                        {personalInfo?.firstName} {personalInfo?.lastName}
-                    </h1>
-                    {personalInfo?.jobTitle && (
-                        <p className="text-xs text-white opacity-75 mt-1 uppercase tracking-wider">{personalInfo.jobTitle}</p>
-                    )}
-                </div>
+                {/* Fixed background for the left sidebar to print on all pages */}
+                <div className="hidden print:block fixed left-0 bottom-0 top-0 w-[35%]" style={{ backgroundColor: color, zIndex: 0 }} />
 
-                {/* Contact */}
-                <SideSection title={lang === 'id' ? 'Kontak' : 'Contact'}>
-                    {personalInfo?.email && (
-                        <div className="text-xs text-white opacity-85 mb-1 break-all">{personalInfo.email}</div>
-                    )}
-                    {personalInfo?.phone && (
-                        <div className="text-xs text-white opacity-85 mb-1">{personalInfo.phone}</div>
-                    )}
-                    {(personalInfo?.city || personalInfo?.country) && (
-                        <div className="text-xs text-white opacity-85 mb-1">
-                            {[personalInfo.city, personalInfo.country].filter(Boolean).join(', ')}
-                        </div>
-                    )}
-                    {personalInfo?.linkedin && (
-                        <div className="text-xs text-white opacity-85 mb-1 break-all">
-                            <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer" className="text-white no-underline">
-                                {personalInfo.linkedin.replace('https://', '')}
-                            </a>
-                        </div>
-                    )}
-                    {personalInfo?.website && (
-                        <div className="text-xs text-white opacity-85 break-all">
-                            <a href={personalInfo.website} target="_blank" rel="noopener noreferrer" className="text-white no-underline">
-                                {personalInfo.website.replace('https://', '')}
-                            </a>
-                        </div>
-                    )}
-                </SideSection>
-
-                {/* Skills */}
-                {safeSkills.length > 0 && (
-                    <SideSection title={t.skills}>
-                        {safeSkills.map((skill, i) => (
-                            <div key={skill?.id || i} className="mb-2">
-                                <div className="flex justify-between mb-0.5">
-                                    <span className="text-xs text-white">{skill?.name}</span>
-                                    <span className="text-xs text-white opacity-60">{skill?.level}</span>
-                                </div>
-                                <div className="w-full bg-white bg-opacity-20 rounded-full h-1">
-                                    <div className="h-1 rounded-full bg-white" style={{ width: `${skillLevel(skill?.level)}%` }} />
-                                </div>
-                            </div>
-                        ))}
-                    </SideSection>
-                )}
-
-                {/* Languages */}
-                {safeLanguages.length > 0 && (
-                    <SideSection title={t.languages}>
-                        {safeLanguages.map((l, i) => (
-                            <div key={i} className="flex justify-between text-xs text-white opacity-85 mb-1">
-                                <span>{l?.language}</span>
-                                <span className="opacity-70">{l?.level}</span>
-                            </div>
-                        ))}
-                    </SideSection>
-                )}
-
-                {/* Certifications */}
-                {safeCertifications.length > 0 && (
-                    <SideSection title={t.certifications}>
-                        {safeCertifications.map((cert, i) => (
-                            <div key={cert?.id || i} className="mb-2">
-                                <div className="text-xs text-white font-semibold">{cert?.name}</div>
-                                <div className="text-xs text-white opacity-70">{cert?.issuer} · {fmtDate(cert?.date)}</div>
-                            </div>
-                        ))}
-                    </SideSection>
-                )}
-
-                {/* References */}
-                {safeReferences.length > 0 && (
-                    <SideSection title={t.references}>
-                        {safeReferences.map((ref, i) => (
-                            <div key={ref?.id || i} className="mb-2">
-                                <div className="text-xs text-white font-semibold">{ref?.name}</div>
-                                <div className="text-xs text-white opacity-70">{ref?.company}</div>
-                                <div className="text-xs text-white opacity-70">{ref?.email}</div>
-                            </div>
-                        ))}
-                    </SideSection>
-                )}
-            </div>
-
-            {/* Main Content */}
-            <div className="flex-1 p-7 overflow-y-auto">
-                {summary && (
-                    <MainSection title={t.profile}>
-                        <div className="text-xs leading-relaxed" style={{ color: txtColor }}>
-                            <MD content={summary} />
-                        </div>
-                    </MainSection>
-                )}
-
-                {safeExperience.length > 0 && (
-                    <MainSection title={t.experience}>
-                        <div className="space-y-4">
-                            {safeExperience.map((exp, i) => (
-                                <div key={exp?.id || i} className="relative pl-4" style={{ borderLeft: `2px solid ${color}20`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                                    <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full border-2" style={{ backgroundColor: 'white', borderColor: color }} />
-                                    <div className="flex justify-between items-baseline mb-0.5">
-                                        <h3 className="text-sm font-semibold" style={{ color: txtColor }}>{exp?.jobTitle}</h3>
-                                        <span className="text-xs text-gray-400">{exp?.city}</span>
+                <tbody style={{ verticalAlign: 'top', position: 'relative', zIndex: 10 }}>
+                    <tr>
+                        {/* Sidebar */}
+                        <td className="w-[35%] p-6" style={{ backgroundColor: color, height: '100%' }}>
+                            {/* Photo or Avatar */}
+                            <div className="mb-6">
+                                {shouldShowPhoto && personalInfo?.photoUrl ? (
+                                    <img
+                                        src={personalInfo.photoUrl}
+                                        alt={`${personalInfo.firstName || ''} ${personalInfo.lastName || ''}`}
+                                        className="object-cover mb-3 shadow-lg"
+                                        style={{
+                                            width: photoSizePx,
+                                            height: photoSizePx,
+                                            borderRadius: photoRadius,
+                                            border: photoOutline ? '3px solid rgba(255,255,255,0.6)' : 'none',
+                                            clipPath: photoShape === 'circle' ? 'circle(50% at 50% 50%)' : 'none'
+                                        }}
+                                    />
+                                ) : shouldShowPhoto ? (
+                                    <div className="bg-white bg-opacity-20 flex items-center justify-center text-white text-3xl font-bold mb-3"
+                                        style={{ width: photoSizePx, height: photoSizePx, borderRadius: photoRadius, border: photoOutline ? '2px solid rgba(255,255,255,0.3)' : 'none' }}>
+                                        {(personalInfo?.firstName || 'R')[0]}{(personalInfo?.lastName || '')[0]}
                                     </div>
-                                    <div className="text-xs font-medium mb-0.5" style={{ color }}>{exp?.employer}</div>
-                                    <div className="text-xs text-gray-400 mb-1">{fmtDate(exp?.startDate)} — {exp?.endDate ? fmtDate(exp.endDate) : t.present}</div>
-                                    <div className="text-xs" style={{ ...textAlignStyle, color: txtColor }}><MD content={exp?.description} /></div>
-                                </div>
-                            ))}
-                        </div>
-                    </MainSection>
-                )}
-
-                {safeEducation.length > 0 && (
-                    <MainSection title={t.education}>
-                        <div className="space-y-3">
-                            {safeEducation.map((edu, i) => (
-                                <div key={edu?.id || i} className="relative pl-4" style={{ borderLeft: `2px solid ${color}20`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                                    <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full border-2" style={{ backgroundColor: 'white', borderColor: color }} />
-                                    <div className="flex justify-between items-baseline mb-0.5">
-                                        <h3 className="text-sm font-semibold" style={{ color: txtColor }}>{edu?.degree}</h3>
-                                        <span className="text-xs text-gray-400">{edu?.city}</span>
-                                    </div>
-                                    <div className="text-xs font-medium mb-0.5" style={{ color }}>{edu?.school}</div>
-                                    <div className="text-xs text-gray-400 mb-1">{fmtDate(edu?.startDate)} — {edu?.endDate ? fmtDate(edu.endDate) : t.present}</div>
-                                    <div className="text-xs" style={{ ...textAlignStyle, color: txtColor }}><MD content={edu?.description} /></div>
-                                </div>
-                            ))}
-                        </div>
-                    </MainSection>
-                )}
-
-                {safeOrganizations.length > 0 && (
-                    <MainSection title={t.organizations}>
-                        <div className="space-y-3">
-                            {safeOrganizations.map((org, i) => (
-                                <div key={org?.id || i} className="relative pl-4" style={{ borderLeft: `2px solid ${color}20`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                                    <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full border-2" style={{ backgroundColor: 'white', borderColor: color }} />
-                                    <h3 className="text-sm font-semibold" style={{ color: txtColor }}>{org?.role}</h3>
-                                    <div className="text-xs font-medium mb-0.5" style={{ color }}>{org?.organization}</div>
-                                    <div className="text-xs text-gray-400 mb-1">{fmtDate(org?.startDate)} — {org?.endDate ? fmtDate(org.endDate) : t.present}</div>
-                                    <div className="text-xs" style={{ ...textAlignStyle, color: txtColor }}><MD content={org?.description} /></div>
-                                </div>
-                            ))}
-                        </div>
-                    </MainSection>
-                )}
-
-                {safeCourses.length > 0 && (
-                    <MainSection title={t.courses}>
-                        {safeCourses.map((c, i) => (
-                            <div key={c?.id || i} className="mb-2">
-                                <div className="text-sm font-semibold" style={{ color: txtColor }}>{c?.name}</div>
-                                <div className="text-xs text-gray-500">{c?.institution} · {c?.startDate} — {c?.endDate}</div>
+                                ) : null}
+                                <h1 className="text-xl font-bold text-white leading-tight">
+                                    {personalInfo?.firstName} {personalInfo?.lastName}
+                                </h1>
+                                {personalInfo?.jobTitle && (
+                                    <p className="text-xs text-white opacity-75 mt-1 uppercase tracking-wider">{personalInfo.jobTitle}</p>
+                                )}
                             </div>
-                        ))}
-                    </MainSection>
-                )}
 
-                {/* Custom Sections */}
-                {(Array.isArray(customSections) ? customSections : []).map((section) => {
-                    if (section.type === 'paragraph_like' && section.description) {
-                        return (
-                            <MainSection key={section.id} title={section.name}>
-                                <div className="text-xs leading-relaxed" style={{ color: txtColor }}>
-                                    <MD content={section.description} />
-                                </div>
-                            </MainSection>
-                        );
-                    }
-                    if (section.type === 'skill_like' && section.items?.length > 0) {
-                        return (
-                            <MainSection key={section.id} title={section.name}>
-                                <div className="flex flex-wrap gap-1">
-                                    {section.items.map((item, idx) => (
-                                        <span key={item?.id || idx} className="text-xs px-2 py-0.5 rounded-full border" style={{ borderColor: `${color}40`, color: txtColor }}>
-                                            {item?.name}{item?.level ? ` (${item.level})` : ''}
-                                        </span>
-                                    ))}
-                                </div>
-                            </MainSection>
-                        );
-                    }
-                    if (section.type === 'experience_like' && section.items?.length > 0) {
-                        return (
-                            <MainSection key={section.id} title={section.name}>
-                                <div className="space-y-4">
-                                    {section.items.map((item, idx) => (
-                                        <div key={item?.id || idx} className="relative pl-4" style={{ borderLeft: `2px solid ${color}20`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                                            <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full border-2" style={{ backgroundColor: 'white', borderColor: color }} />
-                                            <div className="flex justify-between items-baseline mb-0.5">
-                                                <h3 className="text-sm font-semibold" style={{ color: txtColor }}>{item?.title}</h3>
-                                                <span className="text-xs text-gray-400">{item?.city}</span>
+                            {/* Contact */}
+                            <SideSection title={lang === 'id' ? 'Kontak' : 'Contact'}>
+                                {personalInfo?.email && (
+                                    <div className="text-xs text-white opacity-85 mb-1 break-all">{personalInfo.email}</div>
+                                )}
+                                {personalInfo?.phone && (
+                                    <div className="text-xs text-white opacity-85 mb-1">{personalInfo.phone}</div>
+                                )}
+                                {(personalInfo?.city || personalInfo?.country) && (
+                                    <div className="text-xs text-white opacity-85 mb-1">
+                                        {[personalInfo.city, personalInfo.country].filter(Boolean).join(', ')}
+                                    </div>
+                                )}
+                                {personalInfo?.linkedin && (
+                                    <div className="text-xs text-white opacity-85 mb-1 break-all">
+                                        <a href={personalInfo.linkedin} target="_blank" rel="noopener noreferrer" className="text-white no-underline">
+                                            {personalInfo.linkedin.replace('https://', '')}
+                                        </a>
+                                    </div>
+                                )}
+                                {personalInfo?.website && (
+                                    <div className="text-xs text-white opacity-85 break-all">
+                                        <a href={personalInfo.website} target="_blank" rel="noopener noreferrer" className="text-white no-underline">
+                                            {personalInfo.website.replace('https://', '')}
+                                        </a>
+                                    </div>
+                                )}
+                            </SideSection>
+
+                            {/* Skills */}
+                            {safeSkills.length > 0 && (
+                                <SideSection title={t.skills}>
+                                    {safeSkills.map((skill, i) => (
+                                        <div key={skill?.id || i} className="mb-2">
+                                            <div className="flex justify-between mb-0.5">
+                                                <span className="text-xs text-white">{skill?.name}</span>
+                                                <span className="text-xs text-white opacity-60">{skill?.level}</span>
                                             </div>
-                                            <div className="text-xs font-medium mb-0.5" style={{ color }}>{item?.subtitle}</div>
-                                            <div className="text-xs text-gray-400 mb-1">{item?.date}</div>
-                                            <div className="text-xs" style={{ ...textAlignStyle, color: txtColor }}><MD content={item?.description} /></div>
+                                            <div className="w-full bg-white bg-opacity-20 rounded-full h-1">
+                                                <div className="h-1 rounded-full bg-white" style={{ width: `${skillLevel(skill?.level)}%` }} />
+                                            </div>
                                         </div>
                                     ))}
-                                </div>
-                            </MainSection>
-                        );
-                    }
-                    return null;
-                })}
-            </div>
+                                </SideSection>
+                            )}
+
+                            {/* Languages */}
+                            {safeLanguages.length > 0 && (
+                                <SideSection title={t.languages}>
+                                    {safeLanguages.map((l, i) => (
+                                        <div key={i} className="flex justify-between text-xs text-white opacity-85 mb-1">
+                                            <span>{l?.language}</span>
+                                            <span className="opacity-70">{l?.level}</span>
+                                        </div>
+                                    ))}
+                                </SideSection>
+                            )}
+
+                            {/* Certifications */}
+                            {safeCertifications.length > 0 && (
+                                <SideSection title={t.certifications}>
+                                    {safeCertifications.map((cert, i) => (
+                                        <div key={cert?.id || i} className="mb-2">
+                                            <div className="text-xs text-white font-semibold">{cert?.name}</div>
+                                            <div className="text-xs text-white opacity-70">{cert?.issuer} · {fmtDate(cert?.date)}</div>
+                                        </div>
+                                    ))}
+                                </SideSection>
+                            )}
+
+                            {/* References */}
+                            {safeReferences.length > 0 && (
+                                <SideSection title={t.references}>
+                                    {safeReferences.map((ref, i) => (
+                                        <div key={ref?.id || i} className="mb-2">
+                                            <div className="text-xs text-white font-semibold">{ref?.name}</div>
+                                            <div className="text-xs text-white opacity-70">{ref?.company}</div>
+                                            <div className="text-xs text-white opacity-70">{ref?.email}</div>
+                                        </div>
+                                    ))}
+                                </SideSection>
+                            )}
+                        </td>
+
+                        {/* Main Content */}
+                        <td className="w-[65%] p-7">
+                            {summary && (
+                                <MainSection title={t.profile}>
+                                    <div className="text-xs leading-relaxed" style={{ color: txtColor }}>
+                                        <MD content={summary} />
+                                    </div>
+                                </MainSection>
+                            )}
+
+                            {safeExperience.length > 0 && (
+                                <MainSection title={t.experience}>
+                                    <div className="space-y-4">
+                                        {safeExperience.map((exp, i) => (
+                                            <div key={exp?.id || i} className="relative pl-4" style={{ borderLeft: `2px solid ${color}20`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                                <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full border-2" style={{ backgroundColor: 'white', borderColor: color }} />
+                                                <div className="flex justify-between items-baseline mb-0.5">
+                                                    <h3 className="text-sm font-semibold" style={{ color: txtColor }}>{exp?.jobTitle}</h3>
+                                                    <span className="text-xs text-gray-400">{exp?.city}</span>
+                                                </div>
+                                                <div className="text-xs font-medium mb-0.5" style={{ color }}>{exp?.employer}</div>
+                                                <div className="text-xs text-gray-400 mb-1">{fmtDate(exp?.startDate)} — {exp?.endDate ? fmtDate(exp.endDate) : t.present}</div>
+                                                <div className="text-xs" style={{ ...textAlignStyle, color: txtColor }}><MD content={exp?.description} /></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </MainSection>
+                            )}
+
+                            {safeEducation.length > 0 && (
+                                <MainSection title={t.education}>
+                                    <div className="space-y-3">
+                                        {safeEducation.map((edu, i) => (
+                                            <div key={edu?.id || i} className="relative pl-4" style={{ borderLeft: `2px solid ${color}20`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                                <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full border-2" style={{ backgroundColor: 'white', borderColor: color }} />
+                                                <div className="flex justify-between items-baseline mb-0.5">
+                                                    <h3 className="text-sm font-semibold" style={{ color: txtColor }}>{edu?.degree}</h3>
+                                                    <span className="text-xs text-gray-400">{edu?.city}</span>
+                                                </div>
+                                                <div className="text-xs font-medium mb-0.5" style={{ color }}>{edu?.school}</div>
+                                                <div className="text-xs text-gray-400 mb-1">{fmtDate(edu?.startDate)} — {edu?.endDate ? fmtDate(edu.endDate) : t.present}</div>
+                                                <div className="text-xs" style={{ ...textAlignStyle, color: txtColor }}><MD content={edu?.description} /></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </MainSection>
+                            )}
+
+                            {safeOrganizations.length > 0 && (
+                                <MainSection title={t.organizations}>
+                                    <div className="space-y-3">
+                                        {safeOrganizations.map((org, i) => (
+                                            <div key={org?.id || i} className="relative pl-4" style={{ borderLeft: `2px solid ${color}20`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                                <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full border-2" style={{ backgroundColor: 'white', borderColor: color }} />
+                                                <h3 className="text-sm font-semibold" style={{ color: txtColor }}>{org?.role}</h3>
+                                                <div className="text-xs font-medium mb-0.5" style={{ color }}>{org?.organization}</div>
+                                                <div className="text-xs text-gray-400 mb-1">{fmtDate(org?.startDate)} — {org?.endDate ? fmtDate(org.endDate) : t.present}</div>
+                                                <div className="text-xs" style={{ ...textAlignStyle, color: txtColor }}><MD content={org?.description} /></div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </MainSection>
+                            )}
+
+                            {safeCourses.length > 0 && (
+                                <MainSection title={t.courses}>
+                                    {safeCourses.map((c, i) => (
+                                        <div key={c?.id || i} className="mb-2">
+                                            <div className="text-sm font-semibold" style={{ color: txtColor }}>{c?.name}</div>
+                                            <div className="text-xs text-gray-500">{c?.institution} · {c?.startDate} — {c?.endDate}</div>
+                                        </div>
+                                    ))}
+                                </MainSection>
+                            )}
+
+                            {/* Custom Sections */}
+                            {(Array.isArray(customSections) ? customSections : []).map((section) => {
+                                if (section.type === 'paragraph_like' && section.description) {
+                                    return (
+                                        <MainSection key={section.id} title={section.name}>
+                                            <div className="text-xs leading-relaxed" style={{ color: txtColor }}>
+                                                <MD content={section.description} />
+                                            </div>
+                                        </MainSection>
+                                    );
+                                }
+                                if (section.type === 'skill_like' && section.items?.length > 0) {
+                                    return (
+                                        <MainSection key={section.id} title={section.name}>
+                                            <div className="flex flex-wrap gap-1">
+                                                {section.items.map((item, idx) => (
+                                                    <span key={item?.id || idx} className="text-xs px-2 py-0.5 rounded-full border" style={{ borderColor: `${color}40`, color: txtColor }}>
+                                                        {item?.name}{item?.level ? ` (${item.level})` : ''}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </MainSection>
+                                    );
+                                }
+                                if (section.type === 'experience_like' && section.items?.length > 0) {
+                                    return (
+                                        <MainSection key={section.id} title={section.name}>
+                                            <div className="space-y-4">
+                                                {section.items.map((item, idx) => (
+                                                    <div key={item?.id || idx} className="relative pl-4" style={{ borderLeft: `2px solid ${color}20`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                                                        <div className="absolute -left-1.5 top-1 w-3 h-3 rounded-full border-2" style={{ backgroundColor: 'white', borderColor: color }} />
+                                                        <div className="flex justify-between items-baseline mb-0.5">
+                                                            <h3 className="text-sm font-semibold" style={{ color: txtColor }}>{item?.title}</h3>
+                                                            <span className="text-xs text-gray-400">{item?.city}</span>
+                                                        </div>
+                                                        <div className="text-xs font-medium mb-0.5" style={{ color }}>{item?.subtitle}</div>
+                                                        <div className="text-xs text-gray-400 mb-1">{item?.date}</div>
+                                                        <div className="text-xs" style={{ ...textAlignStyle, color: txtColor }}><MD content={item?.description} /></div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </MainSection>
+                                    );
+                                }
+                                return null;
+                            })}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     );
 };

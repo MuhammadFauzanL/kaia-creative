@@ -97,23 +97,23 @@ const ProfessionalTemplate = ({ data }) => {
     const TightSectionLayout = ({ title, items, renderItem, showTitle = true }) => {
         if (!items || items.length === 0) return null;
         return (
-            <section className="mb-3 border-b border-black pb-2 last:border-0 border-opacity-50">
+            <section className="mb-2 border-b border-black pb-1 last:border-0 border-opacity-50">
                 <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                     <tbody>
                         {showTitle && (
                             <tr>
-                                <td className="w-[140px] align-top pr-4 pb-2 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                                    <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-1">{title}</h2>
+                                <td className="w-[140px] align-top pr-4 pb-1 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                                    <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0.5">{title}</h2>
                                 </td>
                                 <td></td>
                             </tr>
                         )}
                         {items.map((item, index) => (
                             <tr key={item?.id || index}>
-                                <td className="w-[140px] align-top text-left text-sm text-black font-medium leading-snug pr-4 pb-3" style={{ width: '140px', verticalAlign: 'top' }}>
+                                <td className="w-[140px] align-top text-left text-sm text-black font-medium leading-snug pr-4 pb-2" style={{ width: '140px', verticalAlign: 'top' }}>
                                     {renderItem(item).date}
                                 </td>
-                                <td className="align-top pb-3 min-w-0" style={{ verticalAlign: 'top' }}>
+                                <td className="align-top pb-2 min-w-0" style={{ verticalAlign: 'top' }}>
                                     <div className="flex-1 -mt-1 min-w-0">
                                         {renderItem(item).content}
                                     </div>
@@ -221,12 +221,12 @@ const ProfessionalTemplate = ({ data }) => {
     );
 
     const renderLanguages = () => safeLanguages.length > 0 && (
-        <section className="mb-3 border-b border-black pb-2 border-opacity-50">
+        <section className="mb-2 border-b border-black pb-1 border-opacity-50">
             <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <tbody>
                     <tr>
-                        <td className="w-[140px] align-top pr-4 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black">{t.languages}</h2>
+                        <td className="w-[140px] align-top pr-4 pb-1 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0.5">{t.languages}</h2>
                         </td>
                         <td className="align-top" style={{ verticalAlign: 'top' }}>
                             <div className="grid grid-cols-2 gap-4">
@@ -245,12 +245,12 @@ const ProfessionalTemplate = ({ data }) => {
     );
 
     const renderSkills = () => safeSkills.length > 0 && (
-        <section className="mb-3 border-b border-black pb-2 border-opacity-50">
+        <section className="mb-2 border-b border-black pb-1 border-opacity-50">
             <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <tbody>
                     <tr>
-                        <td className="w-[140px] align-top pr-4 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black">{t.skills}</h2>
+                        <td className="w-[140px] align-top pr-4 pb-1 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0.5">{t.skills}</h2>
                         </td>
                         <td className="align-top" style={{ verticalAlign: 'top' }}>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -285,12 +285,12 @@ const ProfessionalTemplate = ({ data }) => {
     );
 
     const renderReferences = () => safeReferences.length > 0 && (
-        <section className="mb-3 border-b border-black pb-2 border-opacity-50">
+        <section className="mb-2 border-b border-black pb-1 border-opacity-50">
             <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <tbody>
                     <tr>
-                        <td className="w-[140px] align-top pr-4 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black">{t.references}</h2>
+                        <td className="w-[140px] align-top pr-4 pb-1 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0.5">{t.references}</h2>
                         </td>
                         <td className="align-top" style={{ verticalAlign: 'top' }}>
                             <div className="grid grid-cols-2 gap-6">
@@ -444,12 +444,12 @@ const ProfessionalTemplate = ({ data }) => {
             </header>
 
             {summary && (
-                <section className="mb-3 border-b border-black pb-2 border-opacity-50">
+                <section className="mb-2 border-b border-black pb-1 border-opacity-50">
                     <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                         <tbody>
                             <tr>
-                                <td className="w-[140px] align-top pr-4 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                                    <h2 className="text-sm font-semibold uppercase tracking-widest text-black">{t.profile}</h2>
+                                <td className="w-[140px] align-top pr-4 pb-1 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                                    <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0.5">{t.profile}</h2>
                                 </td>
                                 <td className="align-top" style={{ verticalAlign: 'top' }}>
                                     <div className="text-sm leading-relaxed text-black text-justify -mt-0.5">

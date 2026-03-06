@@ -80,8 +80,12 @@ const ExecutiveTemplate = ({ data }) => {
                     }
                 }
             `}</style>
+
+            {/* Fixed background for the right sidebar to print on all pages */}
+            <div className="hidden print:block fixed right-0 bottom-0 top-0 w-44" style={{ backgroundColor: '#f9fafb', borderLeft: `3px solid ${color}`, zIndex: 0 }} />
+
             {/* Executive Dark Header */}
-            <header className="px-8 pt-7 pb-6" style={{ backgroundColor: color }}>
+            <header className="px-8 pt-7 pb-6 relative z-10" style={{ backgroundColor: color }}>
                 <h1 className="text-3xl font-bold text-white tracking-wide mb-1">
                     {personalInfo.firstName} {personalInfo.lastName}
                 </h1>
@@ -101,9 +105,9 @@ const ExecutiveTemplate = ({ data }) => {
             </header>
 
             {/* Body */}
-            <div className="flex">
+            <div className="w-full relative z-10">
                 {/* Left (main) */}
-                <div className="flex-1 px-8 py-2">
+                <div className="float-left w-[calc(100%-11rem)] px-8 py-4">
                     {summary && (
                         <>
                             <SectionTitle title={t.profile} />
@@ -230,7 +234,7 @@ const ExecutiveTemplate = ({ data }) => {
                 </div>
 
                 {/* Right sidebar */}
-                <div className="w-44 px-4 py-2 bg-gray-50" style={{ borderLeft: `3px solid ${color}` }}>
+                <div className="float-right w-44 px-6 py-6 bg-gray-50 print:bg-transparent print:border-l-0" style={{ borderLeft: `3px solid ${color}` }}>
                     {skills?.length > 0 && (
                         <div className="mb-4">
                             <SectionTitle title={t.skills} />
@@ -283,6 +287,7 @@ const ExecutiveTemplate = ({ data }) => {
                         </div>
                     )}
                 </div>
+                <div className="clear-both"></div>
             </div>
         </div>
     );

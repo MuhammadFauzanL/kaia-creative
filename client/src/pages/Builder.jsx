@@ -93,160 +93,420 @@ const BuilderContent = () => {
         setShowDownloadMenu(false);
 
         const d = resumeData;
+        const tpl = d.template || 'professional';
         const pi = d.personalInfo || {};
         const font = d.font || 'Times New Roman';
+        const color = d.themeColor || '#1a1a2e';
+        const txtColor = d.textColor || '#000000';
+        const textAlign = d.textAlign || 'left';
         const fileName = pi.firstName ? `${pi.firstName}_Resume` : 'Resume';
 
-        // Helper to escape HTML
         const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-        // Helper to render markdown-like content for Word (basic: bold, italic, lists)
-        const renderDesc = (text) => {
+        const renderDesc = (text, forceJustify = false) => {
             if (!text) return '';
-            // Convert markdown bold/italic
             let html = esc(text);
             html = html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
             html = html.replace(/\*(.+?)\*/g, '<i>$1</i>');
-            // Convert markdown lists
             const lines = html.split('\n');
             let result = '';
             let inList = false;
             lines.forEach(line => {
                 const trimmed = line.trim();
+                const align = forceJustify ? 'justify' : textAlign;
                 if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
-                    if (!inList) { result += '<ul>'; inList = true; }
-                    result += `<li>${trimmed.substring(2)}</li>`;
+                    if (!inList) { result += '<ul style="margin:2px 0;padding-left:20px;">'; inList = true; }
+                    result += `<li style="font-size:10pt;color:${txtColor};text-align:${align};">${trimmed.substring(2)}</li>`;
                 } else {
                     if (inList) { result += '</ul>'; inList = false; }
-                    if (trimmed) result += `<p style="margin:2px 0;">${trimmed}</p>`;
+                    if (trimmed) result += `<p style="margin:2px 0;text-align:${align};color:${txtColor};font-size:10pt;">${trimmed}</p>`;
                 }
             });
             if (inList) result += '</ul>';
             return result;
         };
 
-        // Build sections
-        let body = '';
-
-        // --- HEADER ---
-        const fullName = [pi.firstName, pi.lastName].filter(Boolean).join(' ');
-        body += `<div style="text-align:center;margin-bottom:10px;">`;
-        if (fullName) body += `<h1 style="font-size:22pt;margin:0;font-weight:normal;">${esc(fullName)}${pi.jobTitle ? ` <span style="color:#555;">| ${esc(pi.jobTitle)}</span>` : ''}</h1>`;
-        const contactParts = [pi.email, pi.phone, [pi.city, pi.country].filter(Boolean).join(', '), pi.linkedin, pi.website].filter(Boolean);
-        if (contactParts.length > 0) {
-            body += `<p style="font-size:10pt;color:#333;margin:4px 0;">${contactParts.map(c => esc(String(c).trim())).join(', ')}</p>`;
-        }
-        body += `</div><hr style="border:1px solid #ccc;">`;
-
-        // --- SUMMARY ---
-        if (d.summary) {
-            body += `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #999;padding-bottom:3px;margin-top:12px;">Profile</h2>`;
-            body += `<p style="font-size:10pt;text-align:justify;">${renderDesc(d.summary)}</p>`;
-        }
-
-        // --- Helper for experience-like sections ---
-        const renderExpSection = (title, items) => {
-            if (!items || items.length === 0) return '';
-            let html = `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #999;padding-bottom:3px;margin-top:14px;">${esc(title)}</h2>`;
-            html += `<table width="100%" style="border:none;border-collapse:collapse;table-layout:fixed;">`;
-            items.forEach(item => {
-                const mainTitle = item?.title || item?.jobTitle || item?.position || item?.degree || item?.name || '';
-                const mapSub = item?.employer || item?.school || item?.company || item?.subtitle || item?.institution || '';
-
-                // Format tanggal agar sesuai dengan struktur ProfessionalTemplate
-                let dateStr = '';
-                if (item?.startDate && item?.endDate) dateStr = `${item.startDate} — ${item.endDate}`;
-                else if (item?.startDate) dateStr = `${item.startDate} — Present`;
-                else if (item?.date) dateStr = item.date;
-
-                html += `<tr>`;
-
-                // Kolom kiri (Tanggal)
-                html += `<td width="140" style="width:140px;border:none;padding:0 15px 10px 0;font-size:10pt;color:#333;vertical-align:top;"><b>${esc(dateStr)}</b></td>`;
-
-                // Kolom kanan (Isi)
-                html += `<td style="border:none;padding:0 0 10px 0;vertical-align:top;">`;
-
-                html += `<table width="100%" style="border:none;border-collapse:collapse;"><tr>`;
-                html += `<td style="border:none;padding:0;"><b style="font-size:11pt;">${esc(mainTitle)}</b></td>`;
-                html += `<td style="border:none;padding:0;text-align:right;font-size:9pt;color:#666;">${esc(item?.city || item?.location || '')}</td>`;
-                html += `</tr></table>`;
-
-                if (mapSub) {
-                    html += `<div style="font-size:10pt;color:#555;margin:2px 0;">${esc(mapSub)}</div>`;
-                }
-
-                if (item?.description) {
-                    html += `<div style="font-size:10pt;margin-top:3px;">${renderDesc(item.description)}</div>`;
-                }
-
-                html += `</td></tr>`;
-            });
-            html += `</table>`;
-            return html;
+        const formatDate = (dateStr) => {
+            if (!dateStr) return '';
+            const m = dateStr.match(/^(\d{4})-(\d{2})$/);
+            if (m) return new Date(m[1], parseInt(m[2]) - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+            return dateStr;
         };
 
-        // --- Helper for skill-like sections ---
-        const renderSkillSection = (title, items, nameKey = 'name', levelKey = 'level') => {
-            if (!items || items.length === 0) return '';
-            let html = `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #999;padding-bottom:3px;margin-top:14px;">${esc(title)}</h2>`;
-            html += `<table width="100%" style="border:none;border-collapse:collapse;">`;
-            items.forEach(item => {
-                html += `<tr>`;
-                html += `<td style="border:none;padding:2px 0;font-size:10pt;">${esc(item?.[nameKey] || '')}</td>`;
-                const lvl = item?.[levelKey] || '';
-                if (lvl) html += `<td style="border:none;padding:2px 0;font-size:9pt;text-align:right;color:#666;">${esc(lvl)}</td>`;
-                html += `</tr>`;
-            });
-            html += `</table>`;
-            return html;
-        };
+        const getDateRange = (start, end) => `${formatDate(start)} — ${end ? formatDate(end) : 'Present'}`;
 
-        // --- RENDER SECTIONS in order ---
         const sectionOrder = d.sectionOrder || ['education', 'experience', 'organizations', 'certifications', 'languages', 'skills', 'courses', 'references'];
 
-        sectionOrder.forEach(key => {
-            if (key === 'experience' && d.experience?.length > 0) {
-                body += renderExpSection('Experience', d.experience);
-            } else if (key === 'education' && d.education?.length > 0) {
-                body += renderExpSection('Education', d.education);
-            } else if (key === 'skills' && d.skills?.length > 0) {
-                body += renderSkillSection('Skills', d.skills, 'name', 'level');
-            } else if (key === 'languages' && d.languages?.length > 0) {
-                body += renderSkillSection('Languages', d.languages, 'language', 'level');
-            } else if (key === 'organizations' && d.organizations?.length > 0) {
-                body += renderExpSection('Organizations', d.organizations);
-            } else if (key === 'certifications' && d.certifications?.length > 0) {
-                body += renderExpSection('Certifications', d.certifications);
-            } else if (key === 'courses' && d.courses?.length > 0) {
-                body += renderExpSection('Courses', d.courses);
-            } else if (key === 'references' && d.references?.length > 0) {
-                let html = `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #999;padding-bottom:3px;margin-top:14px;">References</h2>`;
-                d.references.forEach(ref => {
-                    html += `<p style="font-size:10pt;margin:4px 0;"><b>${esc(ref?.name || '')}</b>`;
-                    if (ref?.company) html += ` — ${esc(ref.company)}`;
-                    if (ref?.phone) html += ` | ${esc(ref.phone)}`;
-                    if (ref?.email) html += ` | ${esc(ref.email)}`;
-                    html += `</p>`;
-                });
-                body += html;
+        let body = '';
+
+        const getContactHtml = (colorCode, fontColor) => {
+            const parts = [pi.email, pi.phone, [pi.city, pi.country].filter(Boolean).join(', '), pi.linkedin, pi.website].filter(Boolean);
+            return parts.length > 0 ? `<p style="font-size:10pt;color:${fontColor};margin:4px 0;">${parts.map(c => esc(String(c).trim())).join(' | ')}</p>` : '';
+        };
+
+        if (tpl === 'professional' || tpl === 'minimal') {
+            const isProf = tpl === 'professional';
+            const isMin = tpl === 'minimal';
+
+            // Header
+            if (isMin) {
+                body += `<div style="margin-bottom:20px;">`;
+                body += `<h1 style="font-size:28pt;margin:0;font-weight:normal;color:#111;">${esc(pi.firstName)} <b>${esc(pi.lastName)}</b></h1>`;
+                if (pi.jobTitle) body += `<p style="font-size:12pt;color:${color};text-transform:uppercase;letter-spacing:2px;margin:2px 0;">${esc(pi.jobTitle)}</p>`;
+                body += getContactHtml(color, '#555');
+                body += `</div>`;
             } else {
-                // Custom sections
-                const cs = (d.customSections || []).find(s => s.id === key);
-                if (cs) {
-                    if (cs.type === 'paragraph_like' && cs.description) {
-                        body += `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid #999;padding-bottom:3px;margin-top:14px;">${esc(cs.name)}</h2>`;
-                        body += `<div style="font-size:10pt;">${renderDesc(cs.description)}</div>`;
-                    } else if (cs.type === 'skill_like' && cs.items?.length > 0) {
-                        body += renderSkillSection(cs.name, cs.items, 'name', 'level');
-                    } else if (cs.type === 'experience_like' && cs.items?.length > 0) {
-                        body += renderExpSection(cs.name, cs.items);
+                body += `<div style="text-align:center;margin-bottom:10px;">`;
+                const fullName = [pi.firstName, pi.lastName].filter(Boolean).join(' ');
+                if (fullName) body += `<h1 style="font-size:22pt;margin:0;font-weight:normal;">${esc(fullName)}${pi.jobTitle ? ` <span style="color:#555;">| ${esc(pi.jobTitle)}</span>` : ''}</h1>`;
+                body += getContactHtml(color, '#333');
+                body += `</div>`;
+                if (isProf) body += `<hr style="border:1px solid #000;margin-bottom:10px;">`;
+            }
+
+            const renderTitle = (title) => {
+                if (isMin) return `<div style="margin:10px 0 5px 0;"><h2 style="font-size:10pt;text-transform:uppercase;letter-spacing:3px;color:${color};margin:0;">${esc(title)}</h2><hr style="border:0;border-bottom:1px solid ${color};opacity:0.3;margin:2px 0;width:100%;"/></div>`;
+                if (isProf) return `<div style="width:140px;font-size:10pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#000;">${esc(title)}</div>`;
+                return `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid ${color};padding-bottom:3px;margin:12px 0 6px 0;color:${color};">${esc(title)}</h2>`;
+            };
+
+            const wrapSectionProf = (title, content, noWrapList = false) => {
+                if (!content) return '';
+                if (isProf) {
+                    if (noWrapList) {
+                        return `<table width="100%" style="border-collapse:collapse;margin-bottom:10px;">
+                        <tr><td style="width:140px;vertical-align:top;padding:0;">${renderTitle(title)}</td><td></td></tr>
+                        ${content}
+                        </table>
+                        <hr style="border:0; border-top:1px solid #000; margin-bottom:10px;" />`;
+                    }
+                    return `<table width="100%" style="border-collapse:collapse;margin-bottom:10px;">
+                        <tr><td style="width:140px;vertical-align:top;padding:0;">${renderTitle(title)}</td>
+                        <td style="vertical-align:top;padding:0;">${content}</td></tr></table>
+                        <hr style="border:0; border-top:1px solid #000; margin-bottom:10px;" />`;
+                }
+                return renderTitle(title) + `<div style="margin-bottom:12px;">${content}</div>`;
+            };
+
+            let sectionsHtml = '';
+
+            if (d.summary) {
+                sectionsHtml += wrapSectionProf('Profile', `<div style="font-size:10pt;color:${txtColor};text-align:${textAlign};">${renderDesc(d.summary)}</div>`);
+            }
+
+            const buildExpList = (items, isEdu = false) => {
+                let h = '';
+                if (!isProf) h += '<table width="100%" style="border-collapse:collapse;">';
+                items.forEach(item => {
+                    const title = item?.title || item?.jobTitle || item?.position || item?.degree || item?.name || item?.role || '';
+                    const sub = item?.employer || item?.school || item?.company || item?.subtitle || item?.institution || item?.organization || '';
+                    const dateStr = item?.date || getDateRange(item?.startDate, item?.endDate);
+
+                    if (isMin) {
+                        h += `<tr><td style="vertical-align:top;padding:0 0 10px 0;">`;
+                        h += `<table width="100%" style="border-collapse:collapse;">`;
+                        if (dateStr) h += `<tr><td colspan="2" style="font-size:9pt;color:#777;padding-bottom:4px;">${esc(dateStr)}</td></tr>`;
+                        h += `<tr><td style="font-weight:bold;font-size:10pt;color:#111;">${esc(title)}</td><td style="text-align:right;font-size:9pt;color:#777;">${esc(item?.city || '')}</td></tr>`;
+                        h += `</table>`;
+                        if (sub) h += `<div style="font-size:9pt;color:${color};margin-bottom:4px;">${esc(sub)}</div>`;
+                        if (item?.description) h += `<div style="font-size:10pt;">${renderDesc(item.description, true)}</div>`;
+                        h += `</td></tr>`;
+                    } else if (isProf) {
+                        h += `<tr><td style="width:140px;vertical-align:top;padding:0 15px 10px 0;font-size:10pt;color:#000;">${esc(dateStr)}</td>`;
+                        h += `<td style="vertical-align:top;padding:0 0 10px 0;">`;
+                        h += `<table width="100%" style="border-collapse:collapse;"><tr><td style="font-weight:bold;font-size:11pt;color:#000;">${esc(title)}</td><td style="text-align:right;font-size:9pt;color:#000;">${esc(item?.city || '')}</td></tr></table>`;
+                        if (sub) h += `<div style="font-size:10pt;color:#000;margin-bottom:4px;margin-top:4px;">${esc(sub)}</div>`;
+                        if (item?.description) h += `<div style="font-size:10pt;">${renderDesc(item.description, true)}</div>`;
+                        h += `</td></tr>`;
+                    } else {
+                        h += `<tr><td style="vertical-align:top;padding:0 0 10px 0;">`;
+                        h += `<table width="100%" style="border-collapse:collapse;">`;
+                        if (dateStr) h += `<tr><td colspan="2" style="font-size:9pt;color:#555;padding-bottom:4px;">${esc(dateStr)}</td></tr>`;
+                        h += `<tr><td style="font-weight:bold;font-size:11pt;color:#111;">${esc(title)}</td><td style="text-align:right;font-size:9pt;color:#555;">${esc(item?.city || '')}</td></tr>`;
+                        h += `</table>`;
+                        if (sub) h += `<div style="font-size:10pt;font-weight:bold;color:${color};margin-bottom:4px;">${esc(sub)}</div>`;
+                        if (item?.description) h += `<div style="font-size:10pt;">${renderDesc(item.description, true)}</div>`;
+                        h += `</td></tr>`;
+                    }
+                });
+                if (!isProf) h += '</table>';
+                return h;
+            };
+
+            const buildGrid = (items, labelKey, valKey) => {
+                let h = `<table width="100%" style="border-collapse:collapse;"><tr>`;
+                items.forEach((item, i) => {
+                    if (i > 0 && i % 2 === 0) h += `</tr><tr>`;
+                    h += `<td width="50%" style="vertical-align:top;padding:2px 0;font-size:10pt;color:${txtColor};"><b>${esc(item[labelKey] || '')}</b> <span style="color:#666;font-size:9pt;">${esc(item[valKey] || '')}</span></td>`;
+                });
+                h += `</tr></table>`;
+                return h;
+            };
+
+            sectionOrder.forEach(key => {
+                if (key === 'experience' && d.experience?.length > 0) sectionsHtml += wrapSectionProf('Experience', buildExpList(d.experience), true);
+                else if (key === 'education' && d.education?.length > 0) sectionsHtml += wrapSectionProf('Education', buildExpList(d.education, true), true);
+                else if (key === 'skills' && d.skills?.length > 0) sectionsHtml += wrapSectionProf('Skills', buildGrid(d.skills, 'name', 'level'));
+                else if (key === 'languages' && d.languages?.length > 0) sectionsHtml += wrapSectionProf('Languages', buildGrid(d.languages, 'language', 'level'));
+                else if (key === 'organizations' && d.organizations?.length > 0) sectionsHtml += wrapSectionProf('Organizations', buildExpList(d.organizations), true);
+                else if (key === 'certifications' && d.certifications?.length > 0) {
+                    let h = '';
+                    if (isProf) {
+                        d.certifications.forEach(c => {
+                            h += `<tr><td style="width:140px;vertical-align:top;padding:0 15px 10px 0;font-size:10pt;color:#000;">${esc(formatDate(c.date))}</td>
+                            <td style="vertical-align:top;padding:0 0 10px 0;"><div style="font-weight:bold;font-size:11pt;color:#000;">${esc(c.name)}</div><div style="font-size:10pt;color:#000;">${esc(c.issuer)}</div></td></tr>`;
+                        });
+                        sectionsHtml += wrapSectionProf('Certifications', h, true);
+                    } else {
+                        d.certifications.forEach(c => { h += `<div style="margin-bottom:6px;"><div style="font-weight:bold;font-size:10pt;">${esc(c.name)}</div><div style="font-size:9pt;color:#555;">${esc(c.issuer)} · ${esc(formatDate(c.date))}</div></div>` });
+                        sectionsHtml += wrapSectionProf('Certifications', h);
                     }
                 }
+                else if (key === 'courses' && d.courses?.length > 0) sectionsHtml += wrapSectionProf('Courses', buildExpList(d.courses), true);
+                else if (key === 'references' && d.references?.length > 0) {
+                    let h = `<table width="100%" style="border-collapse:collapse;"><tr>`;
+                    d.references.forEach((r, i) => {
+                        if (i > 0 && i % 2 === 0) h += `</tr><tr>`;
+                        h += `<td width="50%" style="padding:4px 0;font-size:10pt;vertical-align:top;"><b>${esc(r.name)}</b><br/><span style="color:#555;">${esc(r.company)}<br/>${esc(r.email)} | ${esc(r.phone)}</span></td>`;
+                    });
+                    h += `</tr></table>`;
+                    sectionsHtml += wrapSectionProf('References', h);
+                } else {
+                    const cs = (d.customSections || []).find(s => s.id === key);
+                    if (cs) {
+                        if (cs.type === 'paragraph_like' && cs.description) sectionsHtml += wrapSectionProf(cs.name, `<div style="font-size:10pt;">${renderDesc(cs.description)}</div>`);
+                        else if (cs.type === 'skill_like' && cs.items?.length > 0) sectionsHtml += wrapSectionProf(cs.name, buildGrid(cs.items, 'name', 'level'));
+                        else if (cs.type === 'experience_like' && cs.items?.length > 0) sectionsHtml += wrapSectionProf(cs.name, buildExpList(cs.items), true);
+                    }
+                }
+            });
+
+            body += sectionsHtml;
+
+        } else if (tpl === 'modern') {
+
+            // Header
+            body += `<table width="100%" style="border-collapse:collapse;margin-bottom:20px;border-bottom:2px solid ${color};padding-bottom:20px;">`;
+            body += `<tr>`;
+            if (d.showPhoto !== false && pi.photoUrl) {
+                const photoRadius = d.photoShape === 'square' ? '4px' : '50%';
+                body += `<td width="80" style="vertical-align:top;"><img src="${pi.photoUrl}" width="64" height="64" style="border-radius:${photoRadius};border:none;"></td>`;
             }
-        });
+            body += `<td style="vertical-align:top;">`;
+            body += `<h1 style="font-size:26pt;margin:0;font-weight:bold;color:${txtColor};">${esc(pi.firstName)} <span style="color:${color};">${esc(pi.lastName)}</span></h1>`;
+            if (pi.jobTitle) body += `<p style="font-size:14pt;font-weight:bold;color:#555;margin:4px 0;">${esc(pi.jobTitle)}</p>`;
+            body += `</td></tr>`;
+            body += `<tr><td colspan="2" style="padding-top:10px;">${getContactHtml('#555', '#555')}</td></tr>`;
+            body += `</table>`;
+
+            // Grid Layout for Modern
+            body += `<table width="100%" style="border-collapse:collapse;"><tr>`;
+
+            // Left Column (8-span ≈ 65%)
+            body += `<td width="65%" style="vertical-align:top;padding-right:20px;">`;
+
+            const mainTitle = (t) => `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:1px;color:${color};border-bottom:2px solid ${color};padding-bottom:2px;margin:15px 0 10px 0;display:inline-block;">${esc(t)}</h2>`;
+
+            const buildMainList = (items) => {
+                let h = '<table width="100%" style="border-collapse:collapse;">';
+                items.forEach(item => {
+                    const title = item?.title || item?.jobTitle || item?.position || item?.degree || item?.name || item?.role || '';
+                    const sub = item?.employer || item?.school || item?.company || item?.subtitle || item?.institution || item?.organization || '';
+                    const dateStr = item?.date || getDateRange(item?.startDate, item?.endDate);
+
+                    h += `<tr>`;
+                    h += `<td width="28%" style="vertical-align:top;padding-right:15px;padding-bottom:12px;"><div style="font-size:9pt;font-weight:bold;color:#555;">${esc(dateStr)}</div></td>`;
+                    h += `<td width="72%" style="vertical-align:top;padding-bottom:12px;">`;
+                    h += `<table width="100%" style="border-collapse:collapse;">`;
+                    h += `<tr><td style="font-weight:bold;font-size:11pt;color:${txtColor};padding-bottom:2px;">${esc(title)}</td><td style="text-align:right;font-size:9pt;color:#555;">${esc(item?.city || '')}</td></tr>`;
+                    h += `</table>`;
+                    if (sub) h += `<div style="font-size:10pt;font-weight:bold;color:#444;margin-bottom:4px;">${esc(sub)}</div>`;
+                    if (item?.description) h += `<div style="font-size:10pt;">${renderDesc(item.description, true)}</div>`;
+                    h += `</td></tr>`;
+                });
+                h += '</table>';
+                return h;
+            };
+
+            if (d.summary) {
+                body += mainTitle('Profile');
+                body += `<div style="font-size:10pt;color:#333;margin-bottom:15px;">${renderDesc(d.summary)}</div>`;
+            }
+
+            sectionOrder.forEach(key => {
+                if (key === 'experience' && d.experience?.length > 0) body += mainTitle('Employment History') + buildMainList(d.experience);
+                else if (key === 'education' && d.education?.length > 0) body += mainTitle('Education') + buildMainList(d.education);
+                else if (key === 'organizations' && d.organizations?.length > 0) body += mainTitle('Organizations') + buildMainList(d.organizations);
+                else if (key === 'custom' && d.customSections?.length > 0) {
+                    d.customSections.forEach(cs => {
+                        if (cs.type === 'paragraph_like' && cs.description) body += mainTitle(cs.name) + `<div style="font-size:10pt;margin-bottom:10px;">${renderDesc(cs.description)}</div>`;
+                        else if (cs.type === 'experience_like' && cs.items?.length > 0) body += mainTitle(cs.name) + buildMainList(cs.items);
+                    });
+                }
+            });
+
+            body += `</td>`;
+
+            // Right Column (4-span ≈ 35%)
+            body += `<td width="35%" style="vertical-align:top;padding-left:15px;">`;
+
+            const sideTitle = (t) => `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:1px;color:${color};margin:15px 0 10px 0;">${esc(t)}</h2>`;
+
+            if (pi.linkedin || pi.website) {
+                body += sideTitle('Links');
+                if (pi.linkedin) body += `<p style="font-size:10pt;margin:2px 0;">LinkedIn: ${esc(pi.linkedin)}</p>`;
+                if (pi.website) body += `<p style="font-size:10pt;margin:2px 0;">Website: ${esc(pi.website)}</p>`;
+            }
+
+            if (d.skills?.length > 0) {
+                body += sideTitle('Skills');
+                d.skills.forEach(sk => { body += `<p style="font-size:10pt;margin:4px 0;"><b>${esc(sk.name)}</b> <span style="font-size:8pt;color:#666;">${esc(sk.level || '')}</span></p>` });
+            }
+            if (d.languages?.length > 0) {
+                body += sideTitle('Languages');
+                d.languages.forEach(l => { body += `<p style="font-size:10pt;margin:4px 0;"><b>${esc(l.language)}</b> <span style="font-size:8pt;color:#666;">${esc(l.level || '')}</span></p>` });
+            }
+            if (d.certifications?.length > 0) {
+                body += sideTitle('Certifications');
+                d.certifications.forEach(c => { body += `<p style="font-size:9pt;margin:6px 0;"><b>${esc(c.name)}</b><br/><span style="color:#555;">${esc(c.issuer)} · ${esc(formatDate(c.date))}</span></p>` });
+            }
+            if (d.courses?.length > 0) {
+                body += sideTitle('Courses');
+                d.courses.forEach(c => { body += `<p style="font-size:9pt;margin:6px 0;"><b>${esc(c.name)}</b><br/><span style="color:#555;">${esc(c.institution)}</p>` });
+            }
+            if (d.references?.length > 0) {
+                body += sideTitle('References');
+                d.references.forEach(r => { body += `<p style="font-size:9pt;margin:6px 0;"><b>${esc(r.name)}</b><br/><span style="color:#555;">${esc(r.company)}<br/>${esc(r.email)}</span></p>` });
+            }
+
+            body += `</td></tr></table>`;
+
+        } else {
+            // Two Column Templates: Executive, Creative, Tech
+            const isExec = tpl === 'executive';
+            const isTech = tpl === 'tech';
+            const isCreative = tpl === 'creative';
+            const sidebarBg = isExec ? '#f9fafb' : isTech ? '#0D1121' : color;
+            const sidebarTxt = isExec ? '#111' : '#fff';
+            const sidebarSec = isExec ? color : 'rgba(255,255,255,0.7)';
+
+            body += `<table width="100%" height="100%" style="border-collapse:collapse;margin:0;padding:0;height:100%;min-height:29.7cm;">`;
+
+            // Header for Executive is full-width top row
+            if (isExec) {
+                body += `<tr><td colspan="2" style="background-color:${color};padding:25px 30px;color:#fff;">`;
+                body += `<h1 style="font-size:24pt;margin:0;color:#fff;font-weight:bold;">${esc(pi.firstName)} ${esc(pi.lastName)}</h1>`;
+                if (pi.jobTitle) body += `<p style="font-size:11pt;color:#fff;opacity:0.8;text-transform:uppercase;letter-spacing:2px;margin:4px 0 10px 0;">${esc(pi.jobTitle)}</p>`;
+                body += `<hr style="border:0;border-bottom:1px solid rgba(255,255,255,0.2);margin-bottom:10px;"/>`;
+                body += getContactHtml('#fff', '#fff');
+                body += `</td></tr>`;
+            }
+
+            body += `<tr>`;
+
+            // Sidebar Left for Creative/Tech
+            const renderSidebarContent = () => {
+                let s = '';
+                if (!isExec) {
+                    s += `<div style="margin-bottom:20px;">`;
+                    s += `<h1 style="font-size:18pt;margin:0;color:${sidebarTxt};font-weight:bold;">${esc(pi.firstName)}<br/>${esc(pi.lastName)}</h1>`;
+                    if (pi.jobTitle) s += `<p style="font-size:9pt;color:${sidebarSec};text-transform:uppercase;letter-spacing:1px;margin:4px 0;">${esc(pi.jobTitle)}</p>`;
+                    s += `</div>`;
+                    s += `<div style="margin-bottom:20px;font-size:9pt;color:${sidebarTxt};">`;
+                    const parts = [pi.email, pi.phone, [pi.city, pi.country].filter(Boolean).join(', '), pi.website].filter(Boolean);
+                    parts.forEach(p => { s += `<div style="margin-bottom:4px;">${esc(p)}</div>`; });
+                    s += `</div>`;
+                }
+                const sideTitle = (t) => `<h2 style="font-size:10pt;text-transform:uppercase;letter-spacing:1px;color:${isExec ? color : '#fff'};border-bottom:1px solid ${isExec ? '#ddd' : 'rgba(255,255,255,0.3)'};padding-bottom:3px;margin:15px 0 8px 0;">${esc(t)}</h2>`;
+
+                if (d.skills?.length > 0) {
+                    s += sideTitle('Skills');
+                    d.skills.forEach(sk => { s += `<div style="font-size:9pt;color:${sidebarTxt};margin-bottom:3px;"><b>${esc(sk.name)}</b> <span style="font-size:8pt;opacity:0.8;">${esc(sk.level || '')}</span></div>` });
+                }
+                if (d.languages?.length > 0) {
+                    s += sideTitle('Languages');
+                    d.languages.forEach(l => { s += `<div style="font-size:9pt;color:${sidebarTxt};margin-bottom:3px;"><b>${esc(l.language)}</b> <span style="font-size:8pt;opacity:0.8;">${esc(l.level || '')}</span></div>` });
+                }
+                if (d.certifications?.length > 0) {
+                    s += sideTitle('Certifications');
+                    d.certifications.forEach(c => { s += `<div style="font-size:9pt;color:${sidebarTxt};margin-bottom:4px;"><b>${esc(c.name)}</b><br/><span style="font-size:8pt;opacity:0.8;">${esc(c.issuer)} · ${esc(formatDate(c.date))}</span></div>` });
+                }
+                if (d.references?.length > 0) {
+                    s += sideTitle('References');
+                    d.references.forEach(r => { s += `<div style="font-size:9pt;color:${sidebarTxt};margin-bottom:4px;"><b>${esc(r.name)}</b><br/><span style="font-size:8pt;opacity:0.8;">${esc(r.company)}<br/>${esc(r.email)}</span></div>` });
+                }
+                return s;
+            };
+
+            const sidebarHtml = `<td width="30%" height="100%" style="vertical-align:top;background-color:${sidebarBg};padding:20px;height:100%;">${renderSidebarContent()}</td>`;
+
+            if (!isExec) body += sidebarHtml; // Sidebar on left for Creative/Tech
+
+            // Main Content
+            body += `<td width="70%" height="100%" style="vertical-align:top;padding:20px;background-color:#fff;height:100%;">`;
+
+            const mainTitle = (t) => {
+                if (isTech) return `<table width="100%" style="border-collapse:collapse;margin:15px 0 10px 0;"><tr><td style="width:15px;color:${color};font-weight:bold;font-family:monospace;">//</td><td><h2 style="font-size:11pt;text-transform:uppercase;letter-spacing:1px;color:${color};margin:0;font-family:monospace;">${esc(t)}</h2></td></tr><tr><td colspan="2"><hr style="border:0;border-bottom:1px solid ${color};opacity:0.3;margin:5px 0;width:100%;"/></td></tr></table>`;
+                if (isExec) return `<h2 style="font-size:11pt;text-transform:uppercase;letter-spacing:2px;color:${color};border-bottom:1px solid ${color};padding-bottom:2px;margin:15px 0 10px 0;">${esc(t)}</h2>`;
+                return `<h2 style="font-size:11pt;text-transform:uppercase;letter-spacing:1px;color:${color};margin:15px 0 10px 0;"><span style="display:inline-block;width:4px;height:12px;background-color:${color};margin-right:6px;"></span>${esc(t)}</h2>`;
+            };
+
+            const buildMainExp = (items) => {
+                let h = '';
+                items.forEach(item => {
+                    const title = item?.title || item?.jobTitle || item?.position || item?.degree || item?.name || item?.role || '';
+                    const sub = item?.employer || item?.school || item?.company || item?.subtitle || item?.institution || item?.organization || '';
+                    const dateStr = item?.date || getDateRange(item?.startDate, item?.endDate);
+
+                    h += `<div style="margin-bottom:12px;">`;
+                    h += `<table width="100%" style="border-collapse:collapse;">`;
+                    if (dateStr) h += `<tr><td colspan="2" style="font-size:9pt;color:#555;padding-bottom:4px;">${esc(dateStr)}</td></tr>`;
+                    h += `<tr><td style="font-weight:bold;font-size:11pt;color:#111;">${esc(title)}</td><td style="text-align:right;font-size:9pt;color:#555;">${esc(item?.city || '')}</td></tr>`;
+                    h += `</table>`;
+                    if (sub) h += `<div style="font-size:10pt;color:${color};font-weight:bold;margin-bottom:4px;">${esc(sub)}</div>`;
+                    if (item?.description) h += `<div style="font-size:10pt;margin-top:4px;">${renderDesc(item.description, true)}</div>`;
+                    h += `</div>`;
+                });
+                return h;
+            };
+
+            if (d.summary) {
+                body += mainTitle('Profile');
+                body += `<div style="font-size:10pt;color:${txtColor};text-align:${textAlign};">${renderDesc(d.summary)}</div>`;
+            }
+
+            sectionOrder.forEach(key => {
+                if (key === 'experience' && d.experience?.length > 0) body += mainTitle('Experience') + buildMainExp(d.experience);
+                else if (key === 'education' && d.education?.length > 0) body += mainTitle('Education') + buildMainExp(d.education);
+                else if (key === 'organizations' && d.organizations?.length > 0) body += mainTitle('Organizations') + buildMainExp(d.organizations);
+                else if (key === 'courses' && d.courses?.length > 0) body += mainTitle('Courses') + buildMainExp(d.courses);
+                else {
+                    const cs = (d.customSections || []).find(s => s.id === key);
+                    if (cs) {
+                        if (cs.type === 'paragraph_like' && cs.description) body += mainTitle(cs.name) + `<div style="font-size:10pt;">${renderDesc(cs.description)}</div>`;
+                        else if (cs.type === 'experience_like' && cs.items?.length > 0) body += mainTitle(cs.name) + buildMainExp(cs.items);
+                        else if (cs.type === 'skill_like' && cs.items?.length > 0 && isExec) {
+                            body += mainTitle(cs.name);
+                            cs.items.forEach(sk => { body += `<span style="font-size:9pt;margin-right:10px;"><b>${esc(sk.name)}</b> ${esc(sk.level || '')}</span>` });
+                        }
+                    }
+                }
+            });
+
+            body += `</td>`;
+            if (isExec) body += sidebarHtml; // Sidebar on right for Executive
+
+            body += `</tr></table>`;
+        }
 
         // --- BUILD WORD DOCUMENT ---
+        let pageMargin = '0cm';
+        if (tpl === 'professional' || tpl === 'modern') pageMargin = '0cm 1.5cm 0cm 1.5cm';
+        else if (tpl === 'minimal') pageMargin = '0.5cm 1.5cm 0.5cm 1.5cm';
+
+        // Add 0 top margin styling for all to guarantee no Extra Space at the top
+        const extraPageStyle = 'mso-header-margin: 0cm; mso-footer-margin: 0cm; mso-page-top-margin: 0cm; mso-page-margin-top: 0cm;';
+
         const htmlContent = `
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
       xmlns:w="urn:schemas-microsoft-com:office:word"
@@ -264,15 +524,15 @@ const BuilderContent = () => {
     </xml>
     <![endif]-->
     <style>
-        @page { size: A4; margin: 2cm 2.5cm; }
-        body { font-family: '${font}', 'Times New Roman', serif; margin: 0; padding: 0; color: #000; }
-        h1 { font-family: '${font}', 'Times New Roman', serif; }
-        h2 { font-family: '${font}', 'Times New Roman', serif; margin-bottom: 6px; }
+        @page { size: A4; margin: ${pageMargin}; ${extraPageStyle} }
+        html, body { height: 100%; min-height: 100%; font-family: '${font}', 'Inter', 'Times New Roman', serif; margin: 0; padding: 0; color: #000; }
+        h1, h2, h3 { font-family: '${font}', 'Inter', 'Times New Roman', serif; margin-bottom: 6px; }
         p { margin: 2px 0; }
         ul { margin: 4px 0; padding-left: 20px; }
         li { font-size: 10pt; margin: 2px 0; }
         table { border: none; }
         td { vertical-align: top; }
+        .page-break { page-break-before: always; }
     </style>
 </head>
 <body>
@@ -510,10 +770,6 @@ const BuilderContent = () => {
                         size: A4;
                         margin: 0; /* Margin 0 untuk menghilangkan header/footer bawaan browser seperti URL localhost */
                     }
-                    ${resumeData.template === 'professional' ? `
-                    @page :first {
-                        margin-top: 0; 
-                    }` : ''}
                     /* The resume paper element */
                     .resume-paper {
                         width: 100% !important;
@@ -523,8 +779,14 @@ const BuilderContent = () => {
                         transform: none !important;
                         margin: 0 !important;
                         page-break-after: auto;
-                        padding-top: 15mm !important; /* Tambahan padding karena margin page 0 */
+                        padding-top: 0 !important;
                         padding-bottom: 15mm !important;
+                        display: flex !important;
+                        flex-direction: column !important;
+                    }
+                    .resume-paper > div {
+                        flex: 1 !important;
+                        min-height: 297mm !important; /* height of a4 */
                     }
                     /* Preserve colors */
                     * {

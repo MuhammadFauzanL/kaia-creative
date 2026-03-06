@@ -289,26 +289,24 @@ const ResumePreview = () => {
                         </>
                     )}
 
-                    {/* Section Order Button - Professional only */}
-                    {isProfessional && (
-                        <>
-                            <div className="w-px h-5 bg-gray-200" />
-                            <button
-                                onClick={() => setShowSectionOrder(!showSectionOrder)}
-                                className={`text-xs font-medium px-2.5 py-1 rounded-lg border transition-all ${showSectionOrder
-                                    ? 'bg-blue-600 text-white border-blue-600'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
-                                    }`}
-                            >
-                                {showSectionOrder ? 'Sembunyikan Urutan' : 'Urutkan Section'}
-                            </button>
-                        </>
-                    )}
+                    {/* Section Order Button */}
+                    <>
+                        <div className="w-px h-5 bg-gray-200" />
+                        <button
+                            onClick={() => setShowSectionOrder(!showSectionOrder)}
+                            className={`text-xs font-medium px-2.5 py-1 rounded-lg border transition-all ${showSectionOrder
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
+                                }`}
+                        >
+                            {showSectionOrder ? 'Sembunyikan Urutan' : 'Urutkan Section'}
+                        </button>
+                    </>
                 </div>
             </div>
 
             {/* Section Order Panel */}
-            {isProfessional && showSectionOrder && (
+            {showSectionOrder && (
                 <div className="bg-white p-3 rounded-xl shadow-md print:hidden z-10 border border-gray-100 w-full max-w-sm self-center">
                     <div className="text-xs font-semibold text-gray-500 mb-2">Urutkan dengan drag:</div>
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
