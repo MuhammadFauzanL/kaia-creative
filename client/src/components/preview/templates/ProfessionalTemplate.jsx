@@ -97,23 +97,23 @@ const ProfessionalTemplate = ({ data }) => {
     const TightSectionLayout = ({ title, items, renderItem, showTitle = true }) => {
         if (!items || items.length === 0) return null;
         return (
-            <section className="mb-2 border-b border-black pb-1 last:border-0 border-opacity-50">
+            <section className="mb-1 border-b border-black pb-0.5 last:border-0 border-opacity-50">
                 <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                     <tbody>
                         {showTitle && (
                             <tr>
-                                <td className="w-[140px] align-top pr-4 pb-1 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                                    <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0.5">{title}</h2>
+                                <td className="w-[140px] align-top pr-4 pb-0.5 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                                    <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0">{title}</h2>
                                 </td>
                                 <td></td>
                             </tr>
                         )}
                         {items.map((item, index) => (
                             <tr key={item?.id || index}>
-                                <td className="w-[140px] align-top text-left text-sm text-black font-medium leading-snug pr-4 pb-2" style={{ width: '140px', verticalAlign: 'top' }}>
+                                <td className="w-[140px] align-top text-left text-sm text-black font-medium leading-snug pr-4 pb-1" style={{ width: '140px', verticalAlign: 'top' }}>
                                     {renderItem(item).date}
                                 </td>
-                                <td className="align-top pb-2 min-w-0" style={{ verticalAlign: 'top' }}>
+                                <td className="align-top pb-1 min-w-0" style={{ verticalAlign: 'top' }}>
                                     <div className="flex-1 -mt-1 min-w-0">
                                         {renderItem(item).content}
                                     </div>
@@ -139,7 +139,7 @@ const ProfessionalTemplate = ({ data }) => {
                             <h3 className="text-base font-medium text-black">{exp?.jobTitle}</h3>
                             <span className="text-sm text-black">{exp?.city}</span>
                         </div>
-                        <div className="text-sm text-black mb-1">{exp?.employer}</div>
+                        <div className="text-sm text-black mb-0.5">{exp?.employer}</div>
                         {exp?.description && (
                             <div className="text-sm text-black leading-snug text-justify">
                                 <MarkdownRenderer content={exp.description} />
@@ -163,7 +163,7 @@ const ProfessionalTemplate = ({ data }) => {
                             <h3 className="text-base font-medium text-black">{edu?.degree}</h3>
                             <span className="text-sm text-black">{edu?.city}</span>
                         </div>
-                        <div className="text-sm text-black mb-1">{edu?.school}</div>
+                        <div className="text-sm text-black mb-0.5">{edu?.school}</div>
                         {edu?.description && (
                             <div className="text-sm text-black leading-snug text-justify">
                                 <MarkdownRenderer content={edu.description} />
@@ -187,7 +187,7 @@ const ProfessionalTemplate = ({ data }) => {
                             <h3 className="text-base font-medium text-black">{org?.role}</h3>
                             <span className="text-sm text-black">{org?.city}</span>
                         </div>
-                        <div className="text-sm text-black mb-1">{org?.organization}</div>
+                        <div className="text-sm text-black mb-0.5">{org?.organization}</div>
                         {org?.description && (
                             <div className="text-sm text-black leading-snug text-justify">
                                 <MarkdownRenderer content={org.description} />
@@ -208,7 +208,7 @@ const ProfessionalTemplate = ({ data }) => {
                 content: (
                     <>
                         <h3 className="text-base font-medium text-black mb-0.5">{cert?.name}</h3>
-                        <div className="text-sm text-black mb-1">{cert?.issuer}</div>
+                        <div className="text-sm text-black mb-0.5">{cert?.issuer}</div>
                         {cert?.description && (
                             <div className="text-sm text-black leading-snug text-justify">
                                 <MarkdownRenderer content={cert.description} />
@@ -221,17 +221,17 @@ const ProfessionalTemplate = ({ data }) => {
     );
 
     const renderLanguages = () => safeLanguages.length > 0 && (
-        <section className="mb-2 border-b border-black pb-1 border-opacity-50">
+        <section className="mb-1 border-b border-black pb-0.5 border-opacity-50">
             <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <tbody>
                     <tr>
-                        <td className="w-[140px] align-top pr-4 pb-1 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0.5">{t.languages}</h2>
+                        <td className="w-[140px] align-top pr-4 pb-0.5 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0">{t.languages}</h2>
                         </td>
                         <td className="align-top" style={{ verticalAlign: 'top' }}>
                             <div className="grid grid-cols-2 gap-4">
                                 {safeLanguages.map((lang, index) => (
-                                    <div key={index} className="text-sm text-black flex justify-between border-b border-gray-100 pb-1">
+                                    <div key={index} className="text-sm text-black flex justify-between border-b border-gray-100 pb-0.5">
                                         <span className="font-semibold">{lang?.language}</span>
                                         <span className="text-black">{lang?.level}</span>
                                     </div>
@@ -245,12 +245,12 @@ const ProfessionalTemplate = ({ data }) => {
     );
 
     const renderSkills = () => safeSkills.length > 0 && (
-        <section className="mb-2 border-b border-black pb-1 border-opacity-50">
+        <section className="mb-1 border-b border-black pb-0.5 border-opacity-50">
             <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <tbody>
                     <tr>
-                        <td className="w-[140px] align-top pr-4 pb-1 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0.5">{t.skills}</h2>
+                        <td className="w-[140px] align-top pr-4 pb-0.5 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0">{t.skills}</h2>
                         </td>
                         <td className="align-top" style={{ verticalAlign: 'top' }}>
                             <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -285,12 +285,12 @@ const ProfessionalTemplate = ({ data }) => {
     );
 
     const renderReferences = () => safeReferences.length > 0 && (
-        <section className="mb-2 border-b border-black pb-1 border-opacity-50">
+        <section className="mb-1 border-b border-black pb-0.5 border-opacity-50">
             <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                 <tbody>
                     <tr>
-                        <td className="w-[140px] align-top pr-4 pb-1 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0.5">{t.references}</h2>
+                        <td className="w-[140px] align-top pr-4 pb-0.5 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                            <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0">{t.references}</h2>
                         </td>
                         <td className="align-top" style={{ verticalAlign: 'top' }}>
                             <div className="grid grid-cols-2 gap-6">
@@ -327,12 +327,12 @@ const ProfessionalTemplate = ({ data }) => {
         sectionRenderers[section.id] = () => {
             if (section.type === 'paragraph_like' && section.description) {
                 return (
-                    <section className="mb-3 border-b border-black pb-2 border-opacity-50">
+                    <section className="mb-1 border-b border-black pb-0.5 border-opacity-50">
                         <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                             <tbody>
                                 <tr>
-                                    <td className="w-[140px] align-top pr-4 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                                        <h2 className="text-sm font-semibold uppercase tracking-widest text-black">{section.name?.toUpperCase()}</h2>
+                                    <td className="w-[140px] align-top pr-4 pb-0.5 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                                        <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0">{section.name?.toUpperCase()}</h2>
                                     </td>
                                     <td className="align-top" style={{ verticalAlign: 'top' }}>
                                         <div className="text-sm leading-relaxed text-black text-justify -mt-0.5">
@@ -347,12 +347,12 @@ const ProfessionalTemplate = ({ data }) => {
             }
             if (section.type === 'skill_like' && section.items?.length > 0) {
                 return (
-                    <section className="mb-3 border-b border-black pb-2 border-opacity-50">
+                    <section className="mb-1 border-b border-black pb-0.5 border-opacity-50">
                         <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                             <tbody>
                                 <tr>
-                                    <td className="w-[140px] align-top pr-4 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                                        <h2 className="text-sm font-semibold uppercase tracking-widest text-black">{section.name?.toUpperCase()}</h2>
+                                    <td className="w-[140px] align-top pr-4 pb-0.5 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                                        <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0">{section.name?.toUpperCase()}</h2>
                                     </td>
                                     <td className="align-top" style={{ verticalAlign: 'top' }}>
                                         <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -383,7 +383,7 @@ const ProfessionalTemplate = ({ data }) => {
                                         <h3 className="text-base font-medium text-black">{item?.title}</h3>
                                         <span className="text-sm text-black">{item?.city}</span>
                                     </div>
-                                    <div className="text-sm text-black mb-1">{item?.subtitle}</div>
+                                    <div className="text-sm text-black mb-0.5">{item?.subtitle}</div>
                                     {item?.description && (
                                         <div className="text-sm text-black leading-snug text-justify">
                                             <MarkdownRenderer content={item.description} />
@@ -417,7 +417,7 @@ const ProfessionalTemplate = ({ data }) => {
                 }
             `}</style>
 
-            <header className="text-center mb-5 border-b border-black pb-3 border-opacity-50">
+            <header className="text-center mb-2 border-b border-black pb-1 border-opacity-50">
                 <div className="flex flex-wrap justify-center items-baseline gap-2 mb-2">
                     <h1 className="text-2xl font-normal text-black tracking-wide leading-none">
                         {personalInfo?.firstName} {personalInfo?.lastName}
@@ -444,12 +444,12 @@ const ProfessionalTemplate = ({ data }) => {
             </header>
 
             {summary && (
-                <section className="mb-2 border-b border-black pb-1 border-opacity-50">
+                <section className="mb-1 border-b border-black pb-0.5 border-opacity-50">
                     <table className="w-full" style={{ borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                         <tbody>
                             <tr>
-                                <td className="w-[140px] align-top pr-4 pb-1 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
-                                    <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0.5">{t.profile}</h2>
+                                <td className="w-[140px] align-top pr-4 pb-0.5 text-left" style={{ width: '140px', verticalAlign: 'top' }}>
+                                    <h2 className="text-sm font-semibold uppercase tracking-widest text-black mb-0">{t.profile}</h2>
                                 </td>
                                 <td className="align-top" style={{ verticalAlign: 'top' }}>
                                     <div className="text-sm leading-relaxed text-black text-justify -mt-0.5">

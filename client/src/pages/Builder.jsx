@@ -115,11 +115,11 @@ const BuilderContent = () => {
                 const trimmed = line.trim();
                 const align = forceJustify ? 'justify' : textAlign;
                 if (trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
-                    if (!inList) { result += '<ul style="margin:2px 0;padding-left:20px;">'; inList = true; }
-                    result += `<li style="font-size:10pt;color:${txtColor};text-align:${align};">${trimmed.substring(2)}</li>`;
+                    if (!inList) { result += '<ul style="margin:0;padding-left:20px;">'; inList = true; }
+                    result += `<li style="font-size:10pt;color:${txtColor};text-align:${align};margin:0;padding:0;">${trimmed.substring(2)}</li>`;
                 } else {
                     if (inList) { result += '</ul>'; inList = false; }
-                    if (trimmed) result += `<p style="margin:2px 0;text-align:${align};color:${txtColor};font-size:10pt;">${trimmed}</p>`;
+                    if (trimmed) result += `<p style="margin:0;text-align:${align};color:${txtColor};font-size:10pt;">${trimmed}</p>`;
                 }
             });
             if (inList) result += '</ul>';
@@ -141,7 +141,7 @@ const BuilderContent = () => {
 
         const getContactHtml = (colorCode, fontColor) => {
             const parts = [pi.email, pi.phone, [pi.city, pi.country].filter(Boolean).join(', '), pi.linkedin, pi.website].filter(Boolean);
-            return parts.length > 0 ? `<p style="font-size:10pt;color:${fontColor};margin:4px 0;">${parts.map(c => esc(String(c).trim())).join(' | ')}</p>` : '';
+            return parts.length > 0 ? `<p style="font-size:10pt;color:${fontColor};margin:0;">${parts.map(c => esc(String(c).trim())).join(' | ')}</p>` : '';
         };
 
         if (tpl === 'professional' || tpl === 'minimal') {
@@ -156,17 +156,17 @@ const BuilderContent = () => {
                 body += getContactHtml(color, '#555');
                 body += `</div>`;
             } else {
-                body += `<div style="text-align:center;margin-bottom:10px;">`;
+                body += `<div style="text-align:center;margin-bottom:0;">`;
                 const fullName = [pi.firstName, pi.lastName].filter(Boolean).join(' ');
                 if (fullName) body += `<h1 style="font-size:22pt;margin:0;font-weight:normal;">${esc(fullName)}${pi.jobTitle ? ` <span style="color:#555;">| ${esc(pi.jobTitle)}</span>` : ''}</h1>`;
                 body += getContactHtml(color, '#333');
                 body += `</div>`;
-                if (isProf) body += `<hr style="border:1px solid #000;margin-bottom:10px;">`;
+                if (isProf) body += `<hr style="border:1px solid #000;margin:0;">`;
             }
 
             const renderTitle = (title) => {
                 if (isMin) return `<div style="margin:10px 0 5px 0;"><h2 style="font-size:10pt;text-transform:uppercase;letter-spacing:3px;color:${color};margin:0;">${esc(title)}</h2><hr style="border:0;border-bottom:1px solid ${color};opacity:0.3;margin:2px 0;width:100%;"/></div>`;
-                if (isProf) return `<div style="width:140px;font-size:10pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#000;">${esc(title)}</div>`;
+                if (isProf) return `<div style="width:140px;font-size:10pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#000;margin:0;">${esc(title)}</div>`;
                 return `<h2 style="font-size:12pt;text-transform:uppercase;letter-spacing:2px;border-bottom:1px solid ${color};padding-bottom:3px;margin:12px 0 6px 0;color:${color};">${esc(title)}</h2>`;
             };
 
@@ -174,16 +174,16 @@ const BuilderContent = () => {
                 if (!content) return '';
                 if (isProf) {
                     if (noWrapList) {
-                        return `<table width="100%" style="border-collapse:collapse;margin-bottom:10px;">
+                        return `<table width="100%" style="border-collapse:collapse;margin:0;">
                         <tr><td style="width:140px;vertical-align:top;padding:0;">${renderTitle(title)}</td><td></td></tr>
                         ${content}
                         </table>
-                        <hr style="border:0; border-top:1px solid #000; margin-bottom:10px;" />`;
+                        <hr style="border:0; border-top:1px solid #000; margin:0;" />`;
                     }
-                    return `<table width="100%" style="border-collapse:collapse;margin-bottom:10px;">
+                    return `<table width="100%" style="border-collapse:collapse;margin:0;">
                         <tr><td style="width:140px;vertical-align:top;padding:0;">${renderTitle(title)}</td>
                         <td style="vertical-align:top;padding:0;">${content}</td></tr></table>
-                        <hr style="border:0; border-top:1px solid #000; margin-bottom:10px;" />`;
+                        <hr style="border:0; border-top:1px solid #000; margin:0;" />`;
                 }
                 return renderTitle(title) + `<div style="margin-bottom:12px;">${content}</div>`;
             };
@@ -212,11 +212,11 @@ const BuilderContent = () => {
                         if (item?.description) h += `<div style="font-size:10pt;">${renderDesc(item.description, true)}</div>`;
                         h += `</td></tr>`;
                     } else if (isProf) {
-                        h += `<tr><td style="width:140px;vertical-align:top;padding:0 15px 10px 0;font-size:10pt;color:#000;">${esc(dateStr)}</td>`;
-                        h += `<td style="vertical-align:top;padding:0 0 10px 0;">`;
-                        h += `<table width="100%" style="border-collapse:collapse;"><tr><td style="font-weight:bold;font-size:11pt;color:#000;">${esc(title)}</td><td style="text-align:right;font-size:9pt;color:#000;">${esc(item?.city || '')}</td></tr></table>`;
-                        if (sub) h += `<div style="font-size:10pt;color:#000;margin-bottom:4px;margin-top:4px;">${esc(sub)}</div>`;
-                        if (item?.description) h += `<div style="font-size:10pt;">${renderDesc(item.description, true)}</div>`;
+                        h += `<tr><td style="width:140px;vertical-align:top;padding:0 15px 0 0;font-size:10pt;color:#000;">${esc(dateStr)}</td>`;
+                        h += `<td style="vertical-align:top;padding:0;">`;
+                        h += `<table width="100%" style="border-collapse:collapse;margin:0;"><tr><td style="font-weight:bold;font-size:11pt;color:#000;padding:0;margin:0;">${esc(title)}</td><td style="text-align:right;font-size:9pt;color:#000;padding:0;margin:0;">${esc(item?.city || '')}</td></tr></table>`;
+                        if (sub) h += `<div style="font-size:10pt;color:#000;margin:0;">${esc(sub)}</div>`;
+                        if (item?.description) h += `<div style="font-size:10pt;margin:0;">${renderDesc(item.description, true)}</div>`;
                         h += `</td></tr>`;
                     } else {
                         h += `<tr><td style="vertical-align:top;padding:0 0 10px 0;">`;
@@ -237,7 +237,7 @@ const BuilderContent = () => {
                 let h = `<table width="100%" style="border-collapse:collapse;"><tr>`;
                 items.forEach((item, i) => {
                     if (i > 0 && i % 2 === 0) h += `</tr><tr>`;
-                    h += `<td width="50%" style="vertical-align:top;padding:2px 0;font-size:10pt;color:${txtColor};"><b>${esc(item[labelKey] || '')}</b> <span style="color:#666;font-size:9pt;">${esc(item[valKey] || '')}</span></td>`;
+                    h += `<td width="50%" style="vertical-align:top;padding:0;font-size:10pt;color:${txtColor};"><b>${esc(item[labelKey] || '')}</b> <span style="color:#666;font-size:9pt;">${esc(item[valKey] || '')}</span></td>`;
                 });
                 h += `</tr></table>`;
                 return h;
@@ -253,8 +253,8 @@ const BuilderContent = () => {
                     let h = '';
                     if (isProf) {
                         d.certifications.forEach(c => {
-                            h += `<tr><td style="width:140px;vertical-align:top;padding:0 15px 10px 0;font-size:10pt;color:#000;">${esc(formatDate(c.date))}</td>
-                            <td style="vertical-align:top;padding:0 0 10px 0;"><div style="font-weight:bold;font-size:11pt;color:#000;">${esc(c.name)}</div><div style="font-size:10pt;color:#000;">${esc(c.issuer)}</div></td></tr>`;
+                            h += `<tr><td style="width:140px;vertical-align:top;padding:0 15px 0 0;font-size:10pt;color:#000;">${esc(formatDate(c.date))}</td>
+                            <td style="vertical-align:top;padding:0;"><div style="font-weight:bold;font-size:11pt;color:#000;margin:0;">${esc(c.name)}</div><div style="font-size:10pt;color:#000;margin:0;">${esc(c.issuer)}</div></td></tr>`;
                         });
                         sectionsHtml += wrapSectionProf('Certifications', h, true);
                     } else {
@@ -526,12 +526,11 @@ const BuilderContent = () => {
     <style>
         @page { size: A4; margin: ${pageMargin}; ${extraPageStyle} }
         html, body { height: 100%; min-height: 100%; font-family: '${font}', 'Inter', 'Times New Roman', serif; margin: 0; padding: 0; color: #000; }
-        h1, h2, h3 { font-family: '${font}', 'Inter', 'Times New Roman', serif; margin-bottom: 6px; }
-        p { margin: 2px 0; }
-        ul { margin: 4px 0; padding-left: 20px; }
-        li { font-size: 10pt; margin: 2px 0; }
-        table { border: none; }
-        td { vertical-align: top; }
+        p { margin: 0; padding: 0; display: inline-block; width: 100%; }
+        ul { margin: 0; padding-left: 20px; }
+        li { font-size: 10pt; margin: 0; padding: 0; }
+        table { border: none; margin: 0; padding: 0; }
+        td { vertical-align: top; padding: 0; }
         .page-break { page-break-before: always; }
     </style>
 </head>
